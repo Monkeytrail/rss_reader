@@ -1,17 +1,24 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
-import { getAllFeedSources } from '../lib/feeds';
+import { getFeedMetadata } from '../lib/feeds';
 
-const sources = await getAllFeedSources();
-const byCategory = sources.reduce(
-  (acc, source) => {
-    if (!acc[source.category]) acc[source.category] = [];
-    acc[source.category].push(source);
-    return acc;
-  },
-  {} as Record<string, typeof sources>,
-);
+const feeds = await getFeedMetadata();
+const quietFeeds = feeds.filter((f) => f.isQuiet);
+const activeFeeds = feeds.filter((f) => !f.isQuiet);
+
+function formatLastSeen(date: Date | null): string {
+  if (!date) return 'Never';
+
+  const days = Math.floor((Date.now() - date.getTime()) / 86400000);
+
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days} days ago`;
+  if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+  if (days < 365) return `${Math.floor(days / 30)} months ago`;
+  return `${Math.floor(days / 365)} years ago`;
+}
 ---
 
 <Layout title="Manage Feeds - RSS Reader">
@@ -20,32 +27,54 @@ const byCategory = sources.reduce(
   <main class="manage-page">
     <h1>Manage Feeds</h1>
 
-    <section class="feed-sources">
-      <h2>Active Feeds ({sources.length})</h2>
+    {quietFeeds.length > 0 && (
+      <section class="quiet-feeds-section">
+        <h2>Quiet feeds ({quietFeeds.length})</h2>
+        <p class="section-description">
+          These feeds haven't published in over 4 weeks. They may be inactive or the feed URL may have changed.
+        </p>
 
-      {Object.entries(byCategory).map(([category, feeds]) => (
-        <details open>
-          <summary>
-            {category} ({feeds.length})
-          </summary>
-          <ul>
-            {feeds.map((feed) => (
-              <li>
-                <div>
-                  <span class="feed-title">{feed.title}</span>
-                  <br />
-                  <code class="feed-url">{feed.url}</code>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </details>
-      ))}
+        <ul class="feed-list">
+          {quietFeeds.map((feed) => (
+            <li class="feed-item quiet">
+              <img src={feed.faviconUrl} alt="" class="feed-icon" width="16" height="16" loading="lazy" />
+              <div class="feed-info">
+                <span class="feed-title">{feed.title}</span>
+                <span class="feed-meta">
+                  {feed.category} &middot; Last article: {formatLastSeen(feed.lastArticleDate)}
+                </span>
+              </div>
+              <a href={feed.url} target="_blank" rel="noopener noreferrer" class="feed-check-link">
+                Check &#8599;
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <section class="active-feeds-section">
+      <h2>Active feeds ({activeFeeds.length})</h2>
+
+      <ul class="feed-list">
+        {activeFeeds.map((feed) => (
+          <li class="feed-item">
+            <img src={feed.faviconUrl} alt="" class="feed-icon" width="16" height="16" loading="lazy" />
+            <div class="feed-info">
+              <span class="feed-title">{feed.title}</span>
+              <span class="feed-meta">
+                {feed.category} &middot; {formatLastSeen(feed.lastArticleDate)}
+                {feed.articleCount > 0 && ` \u00b7 ${feed.articleCount} items`}
+              </span>
+            </div>
+          </li>
+        ))}
+      </ul>
     </section>
 
     <section class="custom-feeds">
       <h2>Custom Feeds</h2>
-      <p class="note">Feeds you added yourself (saved in your browser)</p>
+      <p class="section-description">Feeds you added yourself (saved in your browser)</p>
       <div id="custom-feeds-list"></div>
       <button id="export-opml" class="btn-secondary">Export as OPML</button>
     </section>
@@ -74,15 +103,14 @@ const byCategory = sources.reduce(
     customList!.innerHTML = '<p class="empty">No custom feeds added yet.</p>';
   } else {
     customList!.innerHTML = `
-      <ul>
+      <ul class="feed-list">
         ${customFeeds
           .map(
             (feed) => `
-          <li>
-            <div>
+          <li class="feed-item">
+            <div class="feed-info">
               <span class="feed-title">${feed.title}</span>
-              <br>
-              <code class="feed-url">${feed.url}</code>
+              <span class="feed-meta">${feed.category} &middot; <code>${feed.url}</code></span>
             </div>
             <button class="remove-feed" data-id="${feed.id}" aria-label="Remove ${feed.title}">&times;</button>
           </li>
@@ -126,7 +154,7 @@ const byCategory = sources.reduce(
 
     preview.innerHTML = `
       <p>Found: ${urls.length} feeds</p>
-      <p class="note">Copy the OPML file to <code>public/opml/</code> in your repo and rebuild.</p>
+      <p class="section-description">Copy the OPML file to <code>public/opml/</code> in your repo and rebuild.</p>
     `;
   });
 </script>

@@ -8,12 +8,15 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "astro": "^4.0.0",
-    "rss-parser": "^3.13.0",
-    "fast-xml-parser": "^4.3.0"
+    "@mozilla/readability": "^0.6.0",
+    "astro": "^5.17.1",
+    "fast-xml-parser": "^4.3.0",
+    "jsdom": "^28.0.0",
+    "rss-parser": "^3.13.0"
   },
   "devDependencies": {
     "@netlify/functions": "^2.0.0",
+    "@types/jsdom": "^27.0.0",
     "typescript": "^5.0.0"
   }
 }

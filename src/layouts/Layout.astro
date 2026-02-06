@@ -1,4 +1,7 @@
 ---
+import '../styles/global.css';
+import ReaderModal from '../components/ReaderModal.astro';
+
 interface Props {
   title?: string;
   description?: string;
@@ -25,9 +28,13 @@ const buildTime = new Date().toISOString();
     <link rel="manifest" href="/manifest.json" />
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="stylesheet" href="/styles/global.css" />
-
     <title>{title}</title>
+
+    <script is:inline>
+      // Apply saved theme before render to prevent flash
+      const t = localStorage.getItem('theme');
+      if (t) document.documentElement.setAttribute('data-theme', t);
+    </script>
   </head>
   <body>
     <slot />
@@ -43,17 +50,37 @@ const buildTime = new Date().toISOString();
       </p>
     </footer>
 
+    <ReaderModal />
+
     <script>
       // Register service worker
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js');
       }
 
-      // Theme: check localStorage, then system preference
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme) {
-        document.documentElement.setAttribute('data-theme', savedTheme);
-      }
+      // Read status tracking
+      import { isRead, markAsRead } from '../lib/readStatus';
+
+      // Mark already-read articles on load
+      document.querySelectorAll<HTMLElement>('[data-article-id]').forEach((card) => {
+        if (isRead(card.dataset.articleId!)) {
+          card.classList.add('is-read');
+        }
+      });
+
+      // Mark as read when clicking article link or read-in-app
+      document.addEventListener('click', (e) => {
+        const link = (e.target as Element).closest('.article-title a');
+        const readBtn = (e.target as Element).closest('.read-in-app');
+        const target = link || readBtn;
+        if (!target) return;
+
+        const card = target.closest<HTMLElement>('[data-article-id]');
+        if (!card) return;
+
+        markAsRead(card.dataset.articleId!);
+        card.classList.add('is-read');
+      });
     </script>
   </body>
 </html>

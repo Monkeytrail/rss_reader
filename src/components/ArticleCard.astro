@@ -8,27 +8,46 @@ interface Props {
   pubDate: Date;
   summary?: string;
   feedTitle: string;
+  feedFavicon: string;
   category: string;
   categorySlug: string;
+  readingTime: number;
 }
 
-const { title, link, pubDate, summary, feedTitle, category, categorySlug } = Astro.props;
+const { id, title, link, pubDate, summary, feedTitle, feedFavicon, category, categorySlug, readingTime } = Astro.props;
 
 const searchableText = [title, feedTitle, category, summary].filter(Boolean).join(' ');
 const relativeDate = formatRelativeDate(pubDate);
 const trimmedSummary = summary ? truncate(summary, 160) : '';
 ---
 
-<article class="article-card" data-searchable={searchableText}>
+<article class="article-card" data-searchable={searchableText} data-article-id={id}>
   <h3 class="article-title">
     <a href={link} target="_blank" rel="noopener noreferrer">{title}</a>
   </h3>
   <div class="article-meta">
+    <img
+      src={feedFavicon}
+      alt=""
+      class="feed-icon"
+      width="16"
+      height="16"
+      loading="lazy"
+    />
     <span>{feedTitle}</span>
     <span class="separator">&middot;</span>
     <time datetime={pubDate.toISOString()}>{relativeDate}</time>
+    {readingTime > 0 && (
+      <>
+        <span class="separator">&middot;</span>
+        <span class="reading-time">{readingTime} min</span>
+      </>
+    )}
     <span class="separator">&middot;</span>
     <a href={`/category/${categorySlug}`} class="category-tag">{category}</a>
   </div>
   {trimmedSummary && <p class="article-summary">{trimmedSummary}</p>}
+  <div class="article-actions">
+    <button class="action-button read-in-app" data-url={link}>Read in app</button>
+  </div>
 </article>

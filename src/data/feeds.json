@@ -1,8 +1,8 @@
 {
   "categories": [
     {
-      "name": "Muziek",
-      "slug": "muziek",
+      "name": "Music",
+      "slug": "music",
       "feeds": [
         { "title": "American Songwriter", "url": "https://americansongwriter.com/feed" },
         { "title": "No Depression", "url": "https://nodepression.com/feed" },
@@ -62,7 +62,8 @@
         { "title": "Daring Fireball", "url": "https://daringfireball.net/feeds/main" },
         { "title": "Kottke.org", "url": "https://feeds.kottke.org/main" },
         { "title": "Pluralistic", "url": "https://pluralistic.net/feed" },
-        { "title": "Robin Sloan", "url": "https://robinsloan.com/feed.xml" }
+        { "title": "Robin Sloan", "url": "https://robinsloan.com/feed.xml" },
+        { "title": "Paul Stamatiou", "url": "https://paulstamatiou.com/posts.xml" }
       ]
     },
     {

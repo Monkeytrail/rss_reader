@@ -59,3 +59,10 @@ export function truncate(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength).replace(/\s+\S*$/, '') + '...';
 }
+
+export function calculateReadingTime(text: string | undefined): number {
+  if (!text) return 0;
+  const plainText = text.replace(/<[^>]*>/g, '');
+  const words = plainText.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / 200));
+}
