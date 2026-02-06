@@ -529,6 +529,11 @@ h2 {
 }
 
 /* ===== Reader Modal ===== */
+.reader-modal[hidden],
+.reader-loading[hidden] {
+  display: none;
+}
+
 .reader-modal {
   position: fixed;
   inset: 0;
