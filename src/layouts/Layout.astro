@@ -1,0 +1,59 @@
+---
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = 'RSS Reader', description = 'Minimale RSS reader' } = Astro.props;
+const buildTime = new Date().toISOString();
+---
+
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#0066cc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Reader" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/styles/global.css" />
+
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+
+    <footer class="site-footer">
+      <p>
+        Last updated: <time datetime={buildTime} id="build-time">{
+          new Date(buildTime).toLocaleString('nl-NL', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          })
+        }</time>
+      </p>
+    </footer>
+
+    <script>
+      // Register service worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+      }
+
+      // Theme: check localStorage, then system preference
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme) {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      }
+    </script>
+  </body>
+</html>

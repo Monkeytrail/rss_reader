@@ -1,0 +1,91 @@
+---
+// Client-side only component
+---
+
+<div class="add-feed">
+  <button class="add-feed-toggle" aria-expanded="false" aria-controls="add-feed-form">
+    + Add Feed
+  </button>
+
+  <form id="add-feed-form" class="add-feed-form" hidden>
+    <div class="form-group">
+      <label for="feed-url">Feed URL</label>
+      <input
+        type="url"
+        id="feed-url"
+        name="url"
+        placeholder="https://example.com/feed.xml"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="feed-title">Title (optional)</label>
+      <input
+        type="text"
+        id="feed-title"
+        name="title"
+        placeholder="Auto-detected if left empty"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="feed-category">Category</label>
+      <input type="text" id="feed-category" name="category" value="Custom" list="categories" />
+      <datalist id="categories"></datalist>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary">Add Feed</button>
+      <button type="button" class="btn-secondary add-feed-cancel">Cancel</button>
+    </div>
+
+    <p class="form-note">Custom feeds are saved locally in your browser.</p>
+  </form>
+</div>
+
+<script>
+  import { addCustomFeed } from '../lib/customFeeds';
+
+  const toggle = document.querySelector('.add-feed-toggle');
+  const form = document.getElementById('add-feed-form') as HTMLFormElement;
+  const cancel = document.querySelector('.add-feed-cancel');
+
+  toggle?.addEventListener('click', () => {
+    const expanded = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!expanded));
+    form.hidden = expanded;
+  });
+
+  cancel?.addEventListener('click', () => {
+    toggle?.setAttribute('aria-expanded', 'false');
+    form.hidden = true;
+    form.reset();
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    const url = formData.get('url') as string;
+    let title = formData.get('title') as string;
+    const category = (formData.get('category') as string) || 'Custom';
+
+    if (!title) {
+      try {
+        const response = await fetch(
+          `/.netlify/functions/fetch-feed-info?url=${encodeURIComponent(url)}`,
+        );
+        if (response.ok) {
+          const data = await response.json();
+          title = data.title || new URL(url).hostname;
+        }
+      } catch {
+        title = new URL(url).hostname;
+      }
+    }
+
+    addCustomFeed(url, title, category);
+    window.location.reload();
+  });
+</script>

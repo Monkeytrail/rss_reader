@@ -1,0 +1,76 @@
+---
+// Client-side only component
+---
+
+<div class="search-wrapper">
+  <input
+    type="search"
+    id="search-input"
+    placeholder="Search..."
+    aria-label="Search articles"
+  />
+  <kbd class="search-shortcut">/</kbd>
+</div>
+
+<script>
+  const searchInput = document.getElementById('search-input') as HTMLInputElement;
+  const articles = document.querySelectorAll('[data-searchable]');
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && document.activeElement !== searchInput) {
+      e.preventDefault();
+      searchInput.focus();
+    }
+    if (e.key === 'Escape' && document.activeElement === searchInput) {
+      searchInput.blur();
+      searchInput.value = '';
+      filterArticles('');
+    }
+  });
+
+  searchInput.addEventListener('input', (e) => {
+    const query = (e.target as HTMLInputElement).value;
+    filterArticles(query);
+  });
+
+  function filterArticles(query: string) {
+    const terms = query.toLowerCase().trim().split(/\s+/);
+    let visibleCount = 0;
+
+    articles.forEach((article) => {
+      const searchText = (article.getAttribute('data-searchable') || '').toLowerCase();
+      const matches = !query.trim() || terms.every((term) => searchText.includes(term));
+
+      const element = article as HTMLElement;
+      element.style.display = matches ? '' : 'none';
+
+      if (matches) visibleCount++;
+    });
+
+    document.querySelectorAll('.day-group').forEach((group) => {
+      const visibleArticles = group.querySelectorAll(
+        '[data-searchable]:not([style*="display: none"])',
+      );
+      (group as HTMLElement).style.display = visibleArticles.length > 0 ? '' : 'none';
+    });
+
+    updateNoResultsMessage(query, visibleCount);
+  }
+
+  function updateNoResultsMessage(query: string, count: number) {
+    let noResults = document.getElementById('no-results');
+
+    if (query && count === 0) {
+      if (!noResults) {
+        noResults = document.createElement('p');
+        noResults.id = 'no-results';
+        noResults.className = 'no-results';
+        document.querySelector('.article-list')?.prepend(noResults);
+      }
+      noResults.textContent = `No articles found for "${query}"`;
+      noResults.style.display = '';
+    } else if (noResults) {
+      noResults.style.display = 'none';
+    }
+  }
+</script>

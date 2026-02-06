@@ -1,0 +1,22 @@
+---
+import { getCategories } from '../lib/feeds';
+
+interface Props {
+  activeSlug?: string;
+}
+
+const { activeSlug } = Astro.props;
+const categories = await getCategories();
+---
+
+<nav class="category-nav">
+  <a href="/" class:list={[{ active: !activeSlug }]}>All</a>
+  {categories.map((cat) => (
+    <a
+      href={`/category/${cat.slug}`}
+      class:list={[{ active: activeSlug === cat.slug }]}
+    >
+      {cat.name}
+    </a>
+  ))}
+</nav>

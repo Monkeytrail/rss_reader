@@ -1,0 +1,65 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import CategoryNav from '../../components/CategoryNav.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import { fetchAllFeeds, getCategories } from '../../lib/feeds';
+import { getDayLabel } from '../../lib/utils';
+
+export async function getStaticPaths() {
+  const categories = await getCategories();
+  return categories.map((cat) => ({
+    params: { slug: cat.slug },
+    props: { categoryName: cat.name },
+  }));
+}
+
+const { slug } = Astro.params;
+const { categoryName } = Astro.props;
+
+const allArticles = await fetchAllFeeds();
+const articles = allArticles.filter((a) => a.categorySlug === slug);
+
+// Group articles by day
+const dayGroups = new Map<string, typeof articles>();
+for (const article of articles) {
+  const label = getDayLabel(article.pubDate);
+  if (!dayGroups.has(label)) {
+    dayGroups.set(label, []);
+  }
+  dayGroups.get(label)!.push(article);
+}
+---
+
+<Layout title={`${categoryName} - RSS Reader`}>
+  <Header />
+  <CategoryNav activeSlug={slug} />
+
+  <main class="container">
+    <h1>{categoryName}</h1>
+
+    <div class="article-list">
+      {[...dayGroups.entries()].map(([dayLabel, dayArticles]) => (
+        <section class="day-group">
+          <h2 class="day-label">{dayLabel}</h2>
+          {dayArticles.map((article) => (
+            <ArticleCard
+              id={article.id}
+              title={article.title}
+              link={article.link}
+              pubDate={article.pubDate}
+              summary={article.summary}
+              feedTitle={article.feedTitle}
+              category={article.category}
+              categorySlug={article.categorySlug}
+            />
+          ))}
+        </section>
+      ))}
+    </div>
+
+    {articles.length === 0 && (
+      <p class="no-results">No articles found in this category.</p>
+    )}
+  </main>
+</Layout>

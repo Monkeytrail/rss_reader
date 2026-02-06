@@ -1,0 +1,132 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import { getAllFeedSources } from '../lib/feeds';
+
+const sources = await getAllFeedSources();
+const byCategory = sources.reduce(
+  (acc, source) => {
+    if (!acc[source.category]) acc[source.category] = [];
+    acc[source.category].push(source);
+    return acc;
+  },
+  {} as Record<string, typeof sources>,
+);
+---
+
+<Layout title="Manage Feeds - RSS Reader">
+  <Header />
+
+  <main class="manage-page">
+    <h1>Manage Feeds</h1>
+
+    <section class="feed-sources">
+      <h2>Active Feeds ({sources.length})</h2>
+
+      {Object.entries(byCategory).map(([category, feeds]) => (
+        <details open>
+          <summary>
+            {category} ({feeds.length})
+          </summary>
+          <ul>
+            {feeds.map((feed) => (
+              <li>
+                <div>
+                  <span class="feed-title">{feed.title}</span>
+                  <br />
+                  <code class="feed-url">{feed.url}</code>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ))}
+    </section>
+
+    <section class="custom-feeds">
+      <h2>Custom Feeds</h2>
+      <p class="note">Feeds you added yourself (saved in your browser)</p>
+      <div id="custom-feeds-list"></div>
+      <button id="export-opml" class="btn-secondary">Export as OPML</button>
+    </section>
+
+    <section class="import-section">
+      <h2>Import OPML</h2>
+      <p>Upload an OPML file to preview its feeds.</p>
+      <input type="file" id="opml-upload" accept=".opml,.xml" />
+      <div id="import-preview"></div>
+    </section>
+  </main>
+</Layout>
+
+<script>
+  import {
+    getCustomFeeds,
+    removeCustomFeed,
+    exportCustomFeedsAsOPML,
+  } from '../lib/customFeeds';
+
+  // Show custom feeds
+  const customList = document.getElementById('custom-feeds-list');
+  const customFeeds = getCustomFeeds();
+
+  if (customFeeds.length === 0) {
+    customList!.innerHTML = '<p class="empty">No custom feeds added yet.</p>';
+  } else {
+    customList!.innerHTML = `
+      <ul>
+        ${customFeeds
+          .map(
+            (feed) => `
+          <li>
+            <div>
+              <span class="feed-title">${feed.title}</span>
+              <br>
+              <code class="feed-url">${feed.url}</code>
+            </div>
+            <button class="remove-feed" data-id="${feed.id}" aria-label="Remove ${feed.title}">&times;</button>
+          </li>
+        `,
+          )
+          .join('')}
+      </ul>
+    `;
+
+    customList!.querySelectorAll('.remove-feed').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = (btn as HTMLElement).dataset.id!;
+        removeCustomFeed(id);
+        window.location.reload();
+      });
+    });
+  }
+
+  // Export OPML
+  document.getElementById('export-opml')?.addEventListener('click', () => {
+    const opml = exportCustomFeedsAsOPML();
+    const blob = new Blob([opml], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'custom-feeds.opml';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  // Import OPML preview
+  document.getElementById('opml-upload')?.addEventListener('change', async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    const text = await file.text();
+    const preview = document.getElementById('import-preview')!;
+
+    const matches = text.matchAll(/xmlUrl="([^"]+)"/g);
+    const urls = Array.from(matches).map((m) => m[1]);
+
+    preview.innerHTML = `
+      <p>Found: ${urls.length} feeds</p>
+      <p class="note">Copy the OPML file to <code>public/opml/</code> in your repo and rebuild.</p>
+    `;
+  });
+</script>

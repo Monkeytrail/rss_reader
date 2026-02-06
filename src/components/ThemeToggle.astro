@@ -1,0 +1,47 @@
+---
+// Client-side only component
+---
+
+<button class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+  <span class="theme-icon-light">&#9789;</span>
+  <span class="theme-icon-dark">&#9788;</span>
+</button>
+
+<style>
+  .theme-icon-dark {
+    display: none;
+  }
+
+  :global([data-theme='dark']) .theme-icon-light {
+    display: none;
+  }
+
+  :global([data-theme='dark']) .theme-icon-dark {
+    display: inline;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .theme-icon-light {
+      display: none;
+    }
+
+    :global(:root:not([data-theme='light'])) .theme-icon-dark {
+      display: inline;
+    }
+  }
+</style>
+
+<script>
+  const toggle = document.querySelector('.theme-toggle');
+
+  toggle?.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    const isDark =
+      current === 'dark' ||
+      (!current && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+    const newTheme = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+  });
+</script>

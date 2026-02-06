@@ -1,0 +1,103 @@
+{
+  "categories": [
+    {
+      "name": "Muziek",
+      "slug": "muziek",
+      "feeds": [
+        { "title": "American Songwriter", "url": "https://americansongwriter.com/feed" },
+        { "title": "No Depression", "url": "https://nodepression.com/feed" },
+        { "title": "Blues Rock Review", "url": "https://bluesrockreview.com/feed" },
+        { "title": "Saving Country Music", "url": "https://savingcountrymusic.com/feed" },
+        { "title": "Glide Magazine", "url": "https://glidemagazine.com/feed" }
+      ]
+    },
+    {
+      "name": "Smart Home",
+      "slug": "smart-home",
+      "feeds": [
+        { "title": "Home Assistant Blog", "url": "https://home-assistant.io/atom.xml" },
+        { "title": "Stacey on IoT", "url": "https://staceyoniot.com/feed" },
+        { "title": "Self-Hosted Podcast", "url": "https://selfhosted.show/rss" },
+        { "title": "Jeff Geerling", "url": "https://jeffgeerling.com/blog.xml" }
+      ]
+    },
+    {
+      "name": "Webdevelopment",
+      "slug": "webdevelopment",
+      "feeds": [
+        { "title": "Josh W Comeau", "url": "https://joshwcomeau.com/rss.xml" },
+        { "title": "Piccalilli", "url": "https://piccalil.li/feed.xml" },
+        { "title": "Sara Soueidan", "url": "https://sarasoueidan.com/blog/index.xml" },
+        { "title": "Lea Verou", "url": "https://lea.verou.me/feed" },
+        { "title": "Ahmad Shadeed", "url": "https://ishadeed.com/feed.xml" },
+        { "title": "Chris Ferdinandi", "url": "https://gomakethings.com/feed" },
+        { "title": "Zach Leatherman", "url": "https://zachleat.com/web/feed" },
+        { "title": "Harry Roberts", "url": "https://csswizardry.com/feed.xml" },
+        { "title": "Max Böck", "url": "https://mxb.dev/feed.xml" },
+        { "title": "Hidde de Vries", "url": "https://hidde.blog/feed" }
+      ]
+    },
+    {
+      "name": "UX / UI Design",
+      "slug": "ux-ui",
+      "feeds": [
+        { "title": "Baymard Institute", "url": "https://baymard.com/blog.rss" },
+        { "title": "Luke Wroblewski", "url": "https://lukew.com/ff/rss.asp" },
+        { "title": "Adrian Roselli", "url": "https://adrianroselli.com/feed" },
+        { "title": "Maggie Appleton", "url": "https://maggieappleton.com/rss.xml" },
+        { "title": "Jim Nielsen", "url": "https://blog.jim-nielsen.com/feed.xml" },
+        { "title": "Brad Frost", "url": "https://bradfrost.com/feed" },
+        { "title": "Jeremy Keith", "url": "https://adactio.com/articles/rss" }
+      ]
+    },
+    {
+      "name": "Tech & Long-reads",
+      "slug": "tech-longreads",
+      "feeds": [
+        { "title": "Wait But Why", "url": "https://waitbutwhy.com/feed" },
+        { "title": "Stratechery", "url": "https://stratechery.com/feed" },
+        { "title": "Benedict Evans", "url": "https://ben-evans.com/feed" },
+        { "title": "Astral Codex Ten", "url": "https://astralcodexten.substack.com/feed" },
+        { "title": "The Pragmatic Engineer", "url": "https://pragmaticengineer.com/feed" },
+        { "title": "Daring Fireball", "url": "https://daringfireball.net/feeds/main" },
+        { "title": "Kottke.org", "url": "https://feeds.kottke.org/main" },
+        { "title": "Pluralistic", "url": "https://pluralistic.net/feed" },
+        { "title": "Robin Sloan", "url": "https://robinsloan.com/feed.xml" }
+      ]
+    },
+    {
+      "name": "Linux & Raspberry Pi",
+      "slug": "linux-pi",
+      "feeds": [
+        { "title": "Phoronix", "url": "https://phoronix.com/rss.php" },
+        { "title": "It's FOSS", "url": "https://itsfoss.com/feed" },
+        { "title": "Linux Unplugged", "url": "https://linuxunplugged.com/rss" },
+        { "title": "Drew DeVault", "url": "https://drewdevault.com/blog/index.xml" },
+        { "title": "Michael Stapelberg", "url": "https://michael.stapelberg.ch/feed.xml" },
+        { "title": "Raspberry Pi Blog", "url": "https://raspberrypi.com/news/feed" }
+      ]
+    },
+    {
+      "name": "Culinair",
+      "slug": "culinair",
+      "feeds": [
+        { "title": "Serious Eats", "url": "https://seriouseats.com/feed" },
+        { "title": "David Lebovitz", "url": "https://davidlebovitz.com/feed" },
+        { "title": "Smitten Kitchen", "url": "https://smittenkitchen.com/feed" },
+        { "title": "Kenji López-Alt", "url": "https://kenjilopezalt.com/feed" },
+        { "title": "101 Cookbooks", "url": "https://101cookbooks.com/feed" },
+        { "title": "Chocolate & Zucchini", "url": "https://chocolateandzucchini.com/feed" }
+      ]
+    },
+    {
+      "name": "Zweden",
+      "slug": "zweden",
+      "feeds": [
+        { "title": "The Local Sweden", "url": "https://thelocal.se/feed" },
+        { "title": "Hej Sweden", "url": "https://hejsweden.com/feed" },
+        { "title": "Slow Travel Stockholm", "url": "https://slowtravelstockholm.com/feed" },
+        { "title": "Swedish Freak", "url": "https://swedishfreak.com/feed" }
+      ]
+    }
+  ]
+}
