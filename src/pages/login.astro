@@ -15,7 +15,7 @@
       if (t) document.documentElement.setAttribute('data-theme', t);
     </script>
 
-    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <script is:inline src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 
     <style>
       :root {
@@ -98,6 +98,7 @@
       <h1>Reader</h1>
       <p>Log in to access your feeds.</p>
       <button class="login-btn" id="login-btn">Log in</button>
+      <p id="login-msg" style="display:none; color:#c33; margin-top:1rem; font-size:0.85rem;"></p>
     </div>
 
     <script is:inline>
@@ -109,15 +110,21 @@
         }
       } catch (e) {}
 
+      var msg = document.getElementById('login-msg');
+
       // Handle login
       document.getElementById('login-btn').addEventListener('click', function () {
         if (window.netlifyIdentity) {
           window.netlifyIdentity.open('login');
+        } else {
+          msg.textContent = 'Identity widget failed to load. Are you on the Netlify site?';
+          msg.style.display = 'block';
         }
       });
 
-      // On successful login, redirect to home
+      // Initialize widget and listen for login
       if (window.netlifyIdentity) {
+        window.netlifyIdentity.init();
         window.netlifyIdentity.on('login', function () {
           window.location.replace('/');
         });
