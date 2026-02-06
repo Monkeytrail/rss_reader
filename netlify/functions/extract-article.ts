@@ -1,6 +1,6 @@
 import type { Context } from '@netlify/functions';
 import { Readability } from '@mozilla/readability';
-import { parseHTML } from 'linkedom';
+import { JSDOM } from 'jsdom';
 
 export default async (req: Request, _context: Context) => {
   const url = new URL(req.url);
@@ -26,15 +26,8 @@ export default async (req: Request, _context: Context) => {
     }
 
     const html = await response.text();
-    const { document } = parseHTML(html);
-
-    // Set documentURI for Readability
-    Object.defineProperty(document, 'documentURI', {
-      value: articleUrl,
-      writable: false,
-    });
-
-    const reader = new Readability(document as any);
+    const dom = new JSDOM(html, { url: articleUrl });
+    const reader = new Readability(dom.window.document);
     const article = reader.parse();
 
     if (!article) {
@@ -76,13 +69,14 @@ export default async (req: Request, _context: Context) => {
 };
 
 function sanitizeHtml(html: string): string {
-  const { document } = parseHTML(html);
+  const dom = new JSDOM(html);
+  const document = dom.window.document;
 
   document
     .querySelectorAll('script, iframe, object, embed, form, input, button, style')
-    .forEach((el: Element) => el.remove());
+    .forEach((el) => el.remove());
 
-  document.querySelectorAll('*').forEach((el: Element) => {
+  document.querySelectorAll('*').forEach((el) => {
     Array.from(el.attributes).forEach((attr) => {
       if (
         attr.name.startsWith('on') ||
@@ -93,7 +87,7 @@ function sanitizeHtml(html: string): string {
     });
   });
 
-  document.querySelectorAll('a').forEach((link: HTMLAnchorElement) => {
+  document.querySelectorAll('a').forEach((link) => {
     link.setAttribute('target', '_blank');
     link.setAttribute('rel', 'noopener noreferrer');
   });
