@@ -25,15 +25,23 @@
 <div id="reader-loading" class="reader-loading" hidden>
   <div class="loading-spinner"></div>
   <p>Loading article...</p>
+  <button id="reader-cancel" class="action-button" style="margin-top: 1rem; color: white; border-color: rgba(255,255,255,0.3);">Cancel</button>
 </div>
 
 <script>
   const modal = document.getElementById('reader-modal');
   const loading = document.getElementById('reader-loading');
+  const cancelBtn = document.getElementById('reader-cancel');
 
   if (modal && loading) {
     const backdrop = modal.querySelector('.reader-backdrop');
     const closeBtn = modal.querySelector('.reader-close');
+    let activeController: AbortController | null = null;
+
+    cancelBtn?.addEventListener('click', () => {
+      activeController?.abort();
+      loading.hidden = true;
+    });
 
     document.addEventListener('click', async (e) => {
       const button = (e.target as Element).closest('.read-in-app');
@@ -51,15 +59,19 @@
       modal.hidden = true;
       let success = false;
 
+      activeController = new AbortController();
+      const timeout = setTimeout(() => activeController?.abort(), 15000);
+
       try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15000);
+        console.log('[Reader] Fetching:', url);
 
         const response = await fetch(
           `/.netlify/functions/extract-article?url=${encodeURIComponent(url)}`,
-          { signal: controller.signal },
+          { signal: activeController.signal },
         );
         clearTimeout(timeout);
+
+        console.log('[Reader] Response:', response.status);
 
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const article = await response.json();
@@ -74,9 +86,12 @@
         (document.getElementById('reader-original') as HTMLAnchorElement).href = url;
 
         success = true;
+        console.log('[Reader] Success:', article.title);
       } catch (err) {
-        console.error('Reader error:', err);
+        console.error('[Reader] Error:', err);
       } finally {
+        clearTimeout(timeout);
+        activeController = null;
         loading.hidden = true;
         if (success) {
           modal.hidden = false;
@@ -98,6 +113,10 @@
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !modal.hidden) closeReader();
+      if (e.key === 'Escape' && !loading.hidden) {
+        activeController?.abort();
+        loading.hidden = true;
+      }
     });
   }
 </script>
