@@ -49,9 +49,16 @@
     modal.hidden = true;
 
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+
       const response = await fetch(
         `/.netlify/functions/extract-article?url=${encodeURIComponent(url)}`,
+        { signal: controller.signal },
       );
+      clearTimeout(timeout);
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const article = await response.json();
 
       if (article.error) throw new Error(article.error);
