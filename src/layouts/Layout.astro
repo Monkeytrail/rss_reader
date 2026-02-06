@@ -42,10 +42,10 @@ const buildTime = new Date().toISOString();
         try {
           const user = localStorage.getItem('gotrue.user');
           if (!user || user === 'null') {
-            window.location.replace('/login');
+            window.location.replace('/login' + window.location.hash);
           }
         } catch (e) {
-          window.location.replace('/login');
+          window.location.replace('/login' + window.location.hash);
         }
       }
     </script>
