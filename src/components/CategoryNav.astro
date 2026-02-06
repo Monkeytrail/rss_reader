@@ -9,14 +9,73 @@ const { activeSlug } = Astro.props;
 const categories = await getCategories();
 ---
 
-<nav class="category-nav">
-  <a href="/" class:list={[{ active: !activeSlug }]}>All</a>
-  {categories.map((cat) => (
-    <a
-      href={`/category/${cat.slug}`}
-      class:list={[{ active: activeSlug === cat.slug }]}
-    >
-      {cat.name}
-    </a>
-  ))}
-</nav>
+<div class="category-nav-wrapper">
+  <nav class="category-nav">
+    <a href="/" class:list={['category-link', { active: !activeSlug }]}>All</a>
+    {categories.map((cat) => (
+      <a
+        href={`/category/${cat.slug}`}
+        class:list={['category-link', { active: activeSlug === cat.slug }]}
+      >
+        {cat.name}
+      </a>
+    ))}
+  </nav>
+  <div class="category-more" style="display:none">
+    <button class="category-more-btn">More &#9662;</button>
+    <div class="category-dropdown" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+  function initCategoryNav() {
+    const wrapper = document.querySelector<HTMLElement>('.category-nav-wrapper');
+    const nav = wrapper?.querySelector<HTMLElement>('.category-nav');
+    const more = wrapper?.querySelector<HTMLElement>('.category-more');
+    const btn = wrapper?.querySelector<HTMLButtonElement>('.category-more-btn');
+    const dd = wrapper?.querySelector<HTMLElement>('.category-dropdown');
+    if (!wrapper || !nav || !more || !btn || !dd) return;
+
+    function redistribute() {
+      // Return all links from dropdown back to nav
+      dd!.querySelectorAll('a').forEach((a) => nav!.appendChild(a));
+      more!.style.display = 'none';
+      dd!.style.display = 'none';
+
+      // Check if content overflows
+      if (nav!.scrollWidth <= nav!.clientWidth) return;
+
+      // Show More button (it's outside the nav, so always visible)
+      more!.style.display = '';
+
+      // Move links from the end into the dropdown until nav fits
+      const links = Array.from(nav!.querySelectorAll<HTMLElement>('.category-link'));
+      for (let i = links.length - 1; i >= 0; i--) {
+        if (nav!.scrollWidth <= nav!.clientWidth) break;
+        dd!.insertBefore(links[i], dd!.firstChild);
+      }
+    }
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = dd!.style.display !== 'none';
+      dd!.style.display = open ? 'none' : 'block';
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!more!.contains(e.target as Node)) {
+        dd!.style.display = 'none';
+      }
+    });
+
+    // Wait for styles to be applied before measuring
+    if (document.readyState === 'complete') {
+      redistribute();
+    } else {
+      window.addEventListener('load', redistribute);
+    }
+    window.addEventListener('resize', redistribute);
+  }
+
+  initCategoryNav();
+</script>

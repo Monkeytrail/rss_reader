@@ -8,6 +8,7 @@ export interface CustomFeed {
 }
 
 const STORAGE_KEY = 'rss-reader-custom-feeds';
+const HIDDEN_KEY = 'rss-reader-hidden-feeds';
 
 export function getCustomFeeds(): CustomFeed[] {
   if (typeof localStorage === 'undefined') return [];
@@ -45,6 +46,30 @@ export function addCustomFeed(
 export function removeCustomFeed(id: string): void {
   const feeds = getCustomFeeds().filter((f) => f.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(feeds));
+}
+
+export function getHiddenFeeds(): string[] {
+  if (typeof localStorage === 'undefined') return [];
+
+  try {
+    const stored = localStorage.getItem(HIDDEN_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function hideFeed(url: string): void {
+  const hidden = getHiddenFeeds();
+  if (!hidden.includes(url)) {
+    hidden.push(url);
+    localStorage.setItem(HIDDEN_KEY, JSON.stringify(hidden));
+  }
+}
+
+export function unhideFeed(url: string): void {
+  const hidden = getHiddenFeeds().filter((u) => u !== url);
+  localStorage.setItem(HIDDEN_KEY, JSON.stringify(hidden));
 }
 
 export function exportCustomFeedsAsOPML(): string {

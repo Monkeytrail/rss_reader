@@ -18,6 +18,7 @@ export interface Article {
   author?: string;
   content?: string;
   summary?: string;
+  feedUrl: string;
   feedTitle: string;
   feedFavicon: string;
   category: string;
@@ -108,7 +109,11 @@ export async function fetchAllFeeds(): Promise<Article[]> {
         cachedParsedFeeds!.set(feed.url, parsed);
         const feedArticles: Article[] = [];
 
+        const now = Date.now();
         for (const item of parsed.items.slice(0, 10)) {
+          const pubDate = new Date(item.pubDate || item.isoDate || 0);
+          if (pubDate.getTime() > now || pubDate.getTime() === 0) continue;
+
           const contentText =
             item['content:encoded'] || item.content || item.contentSnippet || item.summary;
 
@@ -118,10 +123,11 @@ export async function fetchAllFeeds(): Promise<Article[]> {
               .slice(0, 20),
             title: item.title || 'Untitled',
             link: item.link || '',
-            pubDate: new Date(item.pubDate || item.isoDate || Date.now()),
+            pubDate,
             author: item.creator || item.author,
             content: item['content:encoded'] || item.content,
             summary: item.contentSnippet || item.summary,
+            feedUrl: feed.url,
             feedTitle: feed.title,
             feedFavicon: feed.faviconUrl,
             category: feed.category,

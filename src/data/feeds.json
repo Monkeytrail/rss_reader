@@ -4,11 +4,12 @@
       "name": "Music",
       "slug": "music",
       "feeds": [
-        { "title": "American Songwriter", "url": "https://americansongwriter.com/feed" },
         { "title": "No Depression", "url": "https://nodepression.com/feed" },
         { "title": "Blues Rock Review", "url": "https://bluesrockreview.com/feed" },
         { "title": "Saving Country Music", "url": "https://savingcountrymusic.com/feed" },
-        { "title": "Glide Magazine", "url": "https://glidemagazine.com/feed" }
+        { "title": "Glide Magazine", "url": "https://glidemagazine.com/feed" },
+        { "title": "Aquarium Drunkard", "url": "https://aquariumdrunkard.com/feed/" },
+        { "title": "Cover Me", "url": "https://covermesongs.com/feed/" }
       ]
     },
     {
@@ -18,7 +19,10 @@
         { "title": "Home Assistant Blog", "url": "https://home-assistant.io/atom.xml" },
         { "title": "Stacey on IoT", "url": "https://staceyoniot.com/feed" },
         { "title": "Self-Hosted Podcast", "url": "https://selfhosted.show/rss" },
-        { "title": "Jeff Geerling", "url": "https://jeffgeerling.com/blog.xml" }
+        { "title": "Jeff Geerling", "url": "https://jeffgeerling.com/blog.xml" },
+        { "title": "Frenck", "url": "https://frenck.dev/rss.xml" },
+        { "title": "Digiblur DIY", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UC5ZdPKE2ckcBhljTc2R_qNA" },
+        { "title": "Andreas Spiess", "url": "https://www.youtube.com/feeds/videos.xml?channel_id=UCu7_D0o48KbfhpEohoP7YSQ" }
       ]
     },
     {
@@ -34,7 +38,10 @@
         { "title": "Zach Leatherman", "url": "https://zachleat.com/web/feed" },
         { "title": "Harry Roberts", "url": "https://csswizardry.com/feed.xml" },
         { "title": "Max Böck", "url": "https://mxb.dev/feed.xml" },
-        { "title": "Hidde de Vries", "url": "https://hidde.blog/feed" }
+        { "title": "Hidde de Vries", "url": "https://hidde.blog/feed" },
+        { "title": "Kevin Powell", "url": "https://www.kevinpowell.co/rss.xml" },
+        { "title": "Stephanie Eckles", "url": "https://thinkdobecreate.com/feed.xml" },
+        { "title": "Michelle Barker", "url": "https://css-irl.info/rss.xml" }
       ]
     },
     {
@@ -60,44 +67,89 @@
         { "title": "Astral Codex Ten", "url": "https://astralcodexten.substack.com/feed" },
         { "title": "The Pragmatic Engineer", "url": "https://pragmaticengineer.com/feed" },
         { "title": "Daring Fireball", "url": "https://daringfireball.net/feeds/main" },
-        { "title": "Kottke.org", "url": "https://feeds.kottke.org/main" },
-        { "title": "Pluralistic", "url": "https://pluralistic.net/feed" },
+        { "title": "Paul Stamatiou", "url": "https://paulstamatiou.com/posts.xml" },
         { "title": "Robin Sloan", "url": "https://robinsloan.com/feed.xml" },
-        { "title": "Paul Stamatiou", "url": "https://paulstamatiou.com/posts.xml" }
+        { "title": "Cal Newport", "url": "https://calnewport.com/blog/feed/" },
+        { "title": "Austin Kleon", "url": "https://austinkleon.com/feed/" },
+        { "title": "Marco Arment", "url": "https://marco.org/rss" },
+        { "title": "Bartosz Ciechanowski", "url": "https://ciechanow.ski/atom.xml" }
+      ]
+    },
+    {
+      "name": "Tech Bloggers",
+      "slug": "tech-bloggers",
+      "feeds": [
+        { "title": "Simon Willison", "url": "https://simonwillison.net/atom/everything/" },
+        { "title": "Sean Goedecke", "url": "https://www.seangoedecke.com/rss.xml" },
+        { "title": "Brian Krebs", "url": "https://krebsonsecurity.com/feed/" },
+        { "title": "Neal Agarwal", "url": "https://neal.fun/rss.xml" },
+        { "title": "Dan Luu", "url": "https://danluu.com/atom.xml" },
+        { "title": "Julia Evans", "url": "https://jvns.ca/atom.xml" },
+        { "title": "Xe Iaso", "url": "https://xeiaso.net/blog.rss" },
+        { "title": "Brandur Leach", "url": "https://brandur.org/articles.atom" },
+        { "title": "Patrick McKenzie", "url": "https://www.kalzumeus.com/feed/" },
+        { "title": "Fatih Arslan", "url": "https://arslan.io/index.xml" }
       ]
     },
     {
       "name": "Linux & Raspberry Pi",
       "slug": "linux-pi",
       "feeds": [
-        { "title": "Phoronix", "url": "https://phoronix.com/rss.php" },
-        { "title": "It's FOSS", "url": "https://itsfoss.com/feed" },
         { "title": "Linux Unplugged", "url": "https://linuxunplugged.com/rss" },
         { "title": "Drew DeVault", "url": "https://drewdevault.com/blog/index.xml" },
         { "title": "Michael Stapelberg", "url": "https://michael.stapelberg.ch/feed.xml" },
-        { "title": "Raspberry Pi Blog", "url": "https://raspberrypi.com/news/feed" }
+        { "title": "Raspberry Pi Blog", "url": "https://raspberrypi.com/news/feed" },
+        { "title": "Brian Donahue", "url": "https://briandorey.com/rss.xml" },
+        { "title": "Le Magit", "url": "https://blog.ktz.me/rss" }
       ]
     },
     {
       "name": "Culinair",
       "slug": "culinair",
       "feeds": [
-        { "title": "Serious Eats", "url": "https://seriouseats.com/feed" },
         { "title": "David Lebovitz", "url": "https://davidlebovitz.com/feed" },
         { "title": "Smitten Kitchen", "url": "https://smittenkitchen.com/feed" },
         { "title": "Kenji López-Alt", "url": "https://kenjilopezalt.com/feed" },
+        { "title": "The Wednesday Chef", "url": "https://thewednesdaychef.com/feed" },
         { "title": "101 Cookbooks", "url": "https://101cookbooks.com/feed" },
+        { "title": "Emiko Davies", "url": "https://emikodavies.com/feed" },
         { "title": "Chocolate & Zucchini", "url": "https://chocolateandzucchini.com/feed" }
       ]
     },
     {
-      "name": "Zweden",
-      "slug": "zweden",
+      "name": "PC Gaming",
+      "slug": "pc-gaming",
       "feeds": [
-        { "title": "The Local Sweden", "url": "https://thelocal.se/feed" },
+        { "title": "Rock Paper Shotgun", "url": "https://www.rockpapershotgun.com/feed" },
+        { "title": "PCGamesN", "url": "https://www.pcgamesn.com/mainrss.xml" },
+        { "title": "NekoJonez", "url": "https://arpegi.wordpress.com/feed" },
+        { "title": "Wolf's Gaming Blog", "url": "https://wolfsgamingblog.com/feed" },
+        { "title": "Raph Koster", "url": "https://www.raphkoster.com/feed/" },
+        { "title": "Keith Burgun", "url": "https://keithburgun.net/feed/" },
+        { "title": "DualShockers", "url": "https://www.dualshockers.com/feed/" },
+        { "title": "Eurogamer", "url": "https://www.eurogamer.net/feed" }
+      ]
+    },
+    {
+      "name": "Board Games",
+      "slug": "board-games",
+      "feeds": [
+        { "title": "BGG News", "url": "https://boardgamegeek.com/rss/geeknews" },
+        { "title": "Dicebreaker", "url": "https://www.dicebreaker.com/feed" },
+        { "title": "Tabletop Games Blog", "url": "https://tabletopgamesblog.com/feed/" }
+      ]
+    },
+    {
+      "name": "Sverige",
+      "slug": "sverige",
+      "feeds": [
+        { "title": "Swedish Adventures", "url": "https://swedishadventures.com/feed" },
         { "title": "Hej Sweden", "url": "https://hejsweden.com/feed" },
+        { "title": "Spaana", "url": "https://spaana.se/blog/feed" },
+        { "title": "Visit Sweden Blog", "url": "https://visitsweden.com/feed" },
         { "title": "Slow Travel Stockholm", "url": "https://slowtravelstockholm.com/feed" },
-        { "title": "Swedish Freak", "url": "https://swedishfreak.com/feed" }
+        { "title": "Swedish Freak", "url": "https://swedishfreak.com/feed" },
+        { "title": "Life in Gothenburg", "url": "https://lifeingothenburg.com/feed" }
       ]
     }
   ]

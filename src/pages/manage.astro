@@ -2,10 +2,18 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import { getFeedMetadata } from '../lib/feeds';
+import feedsConfig from '../data/feeds.json';
 
 const feeds = await getFeedMetadata();
-const quietFeeds = feeds.filter((f) => f.isQuiet);
-const activeFeeds = feeds.filter((f) => !f.isQuiet);
+
+// Group feed metadata by category (preserving feeds.json order)
+const feedsByCategory = new Map<string, typeof feeds>();
+for (const cat of feedsConfig.categories) {
+  const catFeeds = feeds.filter((f) => f.categorySlug === cat.slug);
+  if (catFeeds.length > 0) {
+    feedsByCategory.set(cat.name, catFeeds);
+  }
+}
 
 function formatLastSeen(date: Date | null): string {
   if (!date) return 'Never';
@@ -24,65 +32,89 @@ function formatLastSeen(date: Date | null): string {
 <Layout title="Manage Feeds - RSS Reader">
   <Header />
 
-  <main class="manage-page">
+  <main class="manage-page container">
     <h1>Manage Feeds</h1>
 
-    {quietFeeds.length > 0 && (
-      <section class="quiet-feeds-section">
-        <h2>Quiet feeds ({quietFeeds.length})</h2>
-        <p class="section-description">
-          These feeds haven't published in over 4 weeks. They may be inactive or the feed URL may have changed.
-        </p>
+    <div id="hidden-feeds-section" class="hidden-feeds-section" hidden>
+      <h2>Hidden feeds (<span id="hidden-count">0</span>)</h2>
+      <p class="section-description">These feeds are hidden from your article list.</p>
+      <ul id="hidden-feeds-list" class="feed-list"></ul>
+    </div>
 
+    {[...feedsByCategory.entries()].map(([categoryName, catFeeds]) => (
+      <section class="feed-category-section">
+        <h2>{categoryName} <span class="feed-count">({catFeeds.length})</span></h2>
         <ul class="feed-list">
-          {quietFeeds.map((feed) => (
-            <li class="feed-item quiet">
+          {catFeeds.map((feed) => (
+            <li class="feed-item" data-feed-url={feed.url} style={feed.isQuiet ? 'border-left: 3px solid rgba(255,200,0,0.6); padding-left: 0.5rem; background: rgba(255,200,0,0.02); border-radius: 4px; opacity: 0.6;' : ''}>
               <img src={feed.faviconUrl} alt="" class="feed-icon" width="16" height="16" loading="lazy" />
               <div class="feed-info">
                 <span class="feed-title">{feed.title}</span>
                 <span class="feed-meta">
-                  {feed.category} &middot; Last article: {formatLastSeen(feed.lastArticleDate)}
+                  {formatLastSeen(feed.lastArticleDate)}
+                  {feed.articleCount > 0 && ` \u00b7 ${feed.articleCount} items`}
+                  {feed.isQuiet && ' \u00b7 Quiet'}
                 </span>
               </div>
-              <a href={feed.url} target="_blank" rel="noopener noreferrer" class="feed-check-link">
-                Check &#8599;
-              </a>
+              <button class="remove-feed" data-url={feed.url} aria-label={`Remove ${feed.title}`}>&times;</button>
             </li>
           ))}
         </ul>
       </section>
-    )}
+    ))}
 
-    <section class="active-feeds-section">
-      <h2>Active feeds ({activeFeeds.length})</h2>
-
-      <ul class="feed-list">
-        {activeFeeds.map((feed) => (
-          <li class="feed-item">
-            <img src={feed.faviconUrl} alt="" class="feed-icon" width="16" height="16" loading="lazy" />
-            <div class="feed-info">
-              <span class="feed-title">{feed.title}</span>
-              <span class="feed-meta">
-                {feed.category} &middot; {formatLastSeen(feed.lastArticleDate)}
-                {feed.articleCount > 0 && ` \u00b7 ${feed.articleCount} items`}
-              </span>
-            </div>
-          </li>
-        ))}
-      </ul>
+    <section id="custom-feeds-section" class="feed-category-section">
+      <h2>Custom <span id="custom-count" class="feed-count">(0)</span></h2>
+      <ul id="custom-feeds-list" class="feed-list"></ul>
     </section>
 
-    <section class="custom-feeds">
-      <h2>Custom Feeds</h2>
-      <p class="section-description">Feeds you added yourself (saved in your browser)</p>
-      <div id="custom-feeds-list"></div>
-      <button id="export-opml" class="btn-secondary">Export as OPML</button>
+    <section class="add-feed-section">
+      <h2>Add Feed</h2>
+      <form id="add-feed-form" class="add-feed-form visible">
+        <div class="form-row">
+          <div class="form-group form-group-grow">
+            <label for="feed-url">Feed URL</label>
+            <input
+              type="url"
+              id="feed-url"
+              name="url"
+              placeholder="https://example.com/feed.xml"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="feed-title">Title (optional)</label>
+            <input
+              type="text"
+              id="feed-title"
+              name="title"
+              placeholder="Auto-detected"
+            />
+          </div>
+          <div class="form-group">
+            <label for="feed-category">Category</label>
+            <input type="text" id="feed-category" name="category" value="Custom" list="categories" />
+            <datalist id="categories">
+              {[...feedsByCategory.keys()].map((name) => (
+                <option value={name} />
+              ))}
+            </datalist>
+          </div>
+          <div class="form-group form-group-btn">
+            <button type="submit" class="btn-primary">Add</button>
+          </div>
+        </div>
+        <p class="form-note">Custom feeds are saved locally in your browser.</p>
+      </form>
     </section>
 
-    <section class="import-section">
-      <h2>Import OPML</h2>
-      <p>Upload an OPML file to preview its feeds.</p>
-      <input type="file" id="opml-upload" accept=".opml,.xml" />
+    <section class="manage-actions">
+      <h2>Import / Export</h2>
+      <div class="opml-buttons">
+        <button id="export-opml" class="btn-secondary">Export OPML</button>
+        <label for="opml-upload" class="btn-secondary upload-label">Import OPML</label>
+        <input type="file" id="opml-upload" accept=".opml,.xml" hidden />
+      </div>
       <div id="import-preview"></div>
     </section>
   </main>
@@ -92,44 +124,143 @@ function formatLastSeen(date: Date | null): string {
   import {
     getCustomFeeds,
     removeCustomFeed,
+    addCustomFeed,
+    getHiddenFeeds,
+    hideFeed,
+    unhideFeed,
     exportCustomFeedsAsOPML,
   } from '../lib/customFeeds';
 
-  // Show custom feeds
-  const customList = document.getElementById('custom-feeds-list');
-  const customFeeds = getCustomFeeds();
+  // --- Hidden feeds ---
+  function renderHiddenFeeds() {
+    const hidden = getHiddenFeeds();
+    const section = document.getElementById('hidden-feeds-section')!;
+    const list = document.getElementById('hidden-feeds-list')!;
+    const count = document.getElementById('hidden-count')!;
 
-  if (customFeeds.length === 0) {
-    customList!.innerHTML = '<p class="empty">No custom feeds added yet.</p>';
-  } else {
-    customList!.innerHTML = `
-      <ul class="feed-list">
-        ${customFeeds
-          .map(
-            (feed) => `
-          <li class="feed-item">
-            <div class="feed-info">
-              <span class="feed-title">${feed.title}</span>
-              <span class="feed-meta">${feed.category} &middot; <code>${feed.url}</code></span>
-            </div>
-            <button class="remove-feed" data-id="${feed.id}" aria-label="Remove ${feed.title}">&times;</button>
-          </li>
-        `,
-          )
-          .join('')}
-      </ul>
-    `;
+    if (hidden.length === 0) {
+      section.hidden = true;
+      return;
+    }
 
-    customList!.querySelectorAll('.remove-feed').forEach((btn) => {
+    section.hidden = false;
+    count.textContent = String(hidden.length);
+
+    list.innerHTML = hidden
+      .map(
+        (url) => `
+        <li class="feed-item">
+          <div class="feed-info">
+            <span class="feed-meta"><code>${url}</code></span>
+          </div>
+          <button class="restore-feed btn-secondary" data-url="${url}">Restore</button>
+        </li>
+      `,
+      )
+      .join('');
+
+    list.querySelectorAll('.restore-feed').forEach((btn) => {
       btn.addEventListener('click', () => {
-        const id = (btn as HTMLElement).dataset.id!;
-        removeCustomFeed(id);
-        window.location.reload();
+        unhideFeed((btn as HTMLElement).dataset.url!);
+        // Show the feed item again in the main list
+        const feedItem = document.querySelector(`.feed-item[data-feed-url="${(btn as HTMLElement).dataset.url}"]`);
+        if (feedItem) (feedItem as HTMLElement).hidden = false;
+        renderHiddenFeeds();
       });
     });
   }
 
-  // Export OPML
+  // Mark already-hidden feeds in the server-rendered list
+  const hiddenUrls = new Set(getHiddenFeeds());
+  document.querySelectorAll<HTMLElement>('.feed-item[data-feed-url]').forEach((item) => {
+    if (hiddenUrls.has(item.dataset.feedUrl!)) {
+      item.hidden = true;
+    }
+  });
+
+  // Attach remove handlers to default feed items
+  document.querySelectorAll<HTMLElement>('.remove-feed[data-url]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const url = btn.dataset.url!;
+      hideFeed(url);
+      const feedItem = btn.closest<HTMLElement>('.feed-item');
+      if (feedItem) feedItem.hidden = true;
+      renderHiddenFeeds();
+    });
+  });
+
+  renderHiddenFeeds();
+
+  // --- Custom feeds ---
+  function renderCustomFeeds() {
+    const customFeeds = getCustomFeeds();
+    const list = document.getElementById('custom-feeds-list')!;
+    const count = document.getElementById('custom-count')!;
+    const section = document.getElementById('custom-feeds-section')!;
+
+    count.textContent = `(${customFeeds.length})`;
+
+    if (customFeeds.length === 0) {
+      list.innerHTML = '<li class="feed-item"><p class="empty">No custom feeds added yet.</p></li>';
+      return;
+    }
+
+    list.innerHTML = customFeeds
+      .map(
+        (feed) => `
+        <li class="feed-item">
+          <img src="https://www.google.com/s2/favicons?domain=${new URL(feed.url).hostname}&sz=32" alt="" class="feed-icon" width="16" height="16" loading="lazy" />
+          <div class="feed-info">
+            <span class="feed-title">${feed.title}</span>
+            <span class="feed-meta">${feed.category} &middot; <code>${feed.url}</code></span>
+          </div>
+          <button class="remove-feed" data-custom-id="${feed.id}" aria-label="Remove ${feed.title}">&times;</button>
+        </li>
+      `,
+      )
+      .join('');
+
+    list.querySelectorAll('.remove-feed[data-custom-id]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        removeCustomFeed((btn as HTMLElement).dataset.customId!);
+        renderCustomFeeds();
+      });
+    });
+  }
+
+  renderCustomFeeds();
+
+  // --- Add feed form ---
+  const form = document.getElementById('add-feed-form') as HTMLFormElement;
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    const url = formData.get('url') as string;
+    let title = formData.get('title') as string;
+    const category = (formData.get('category') as string) || 'Custom';
+
+    if (!title) {
+      try {
+        const response = await fetch(
+          `/.netlify/functions/fetch-feed-info?url=${encodeURIComponent(url)}`,
+        );
+        if (response.ok) {
+          const data = await response.json();
+          title = data.title || new URL(url).hostname;
+        }
+      } catch {
+        title = new URL(url).hostname;
+      }
+    }
+
+    addCustomFeed(url, title, category);
+    form.reset();
+    (document.getElementById('feed-category') as HTMLInputElement).value = 'Custom';
+    renderCustomFeeds();
+  });
+
+  // --- Export OPML ---
   document.getElementById('export-opml')?.addEventListener('click', () => {
     const opml = exportCustomFeedsAsOPML();
     const blob = new Blob([opml], { type: 'application/xml' });
@@ -141,7 +272,7 @@ function formatLastSeen(date: Date | null): string {
     URL.revokeObjectURL(url);
   });
 
-  // Import OPML preview
+  // --- Import OPML ---
   document.getElementById('opml-upload')?.addEventListener('change', async (e) => {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (!file) return;

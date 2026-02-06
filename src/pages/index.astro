@@ -36,6 +36,7 @@ for (const article of articles) {
               link={article.link}
               pubDate={article.pubDate}
               summary={article.summary}
+              feedUrl={article.feedUrl}
               feedTitle={article.feedTitle}
               feedFavicon={article.feedFavicon}
               category={article.category}
@@ -51,11 +52,21 @@ for (const article of articles) {
   </main>
 
   <script>
-    // Load custom feeds client-side
-    import { getCustomFeeds } from '../lib/customFeeds';
+    // Hide feeds the user has removed
+    import { getCustomFeeds, getHiddenFeeds } from '../lib/customFeeds';
 
+    const hiddenUrls = new Set(getHiddenFeeds());
+    if (hiddenUrls.size > 0) {
+      document.querySelectorAll<HTMLElement>('.article-card[data-feed-url]').forEach((card) => {
+        if (hiddenUrls.has(card.dataset.feedUrl!)) {
+          card.remove();
+        }
+      });
+    }
+
+    // Load custom feeds client-side
     async function loadCustomFeeds() {
-      const customFeeds = getCustomFeeds();
+      const customFeeds = getCustomFeeds().filter((f) => !hiddenUrls.has(f.url));
       if (customFeeds.length === 0) return;
 
       try {

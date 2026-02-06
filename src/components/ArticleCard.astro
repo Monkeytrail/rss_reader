@@ -7,6 +7,7 @@ interface Props {
   link: string;
   pubDate: Date;
   summary?: string;
+  feedUrl: string;
   feedTitle: string;
   feedFavicon: string;
   category: string;
@@ -14,14 +15,14 @@ interface Props {
   readingTime: number;
 }
 
-const { id, title, link, pubDate, summary, feedTitle, feedFavicon, category, categorySlug, readingTime } = Astro.props;
+const { id, title, link, pubDate, summary, feedUrl, feedTitle, feedFavicon, category, categorySlug, readingTime } = Astro.props;
 
 const searchableText = [title, feedTitle, category, summary].filter(Boolean).join(' ');
 const relativeDate = formatRelativeDate(pubDate);
 const trimmedSummary = summary ? truncate(summary, 160) : '';
 ---
 
-<article class="article-card" data-searchable={searchableText} data-article-id={id}>
+<article class="article-card" data-searchable={searchableText} data-article-id={id} data-feed-url={feedUrl}>
   <h3 class="article-title">
     <a href={link} target="_blank" rel="noopener noreferrer">{title}</a>
   </h3>
