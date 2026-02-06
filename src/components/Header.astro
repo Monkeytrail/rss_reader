@@ -11,5 +11,21 @@ import ThemeToggle from './ThemeToggle.astro';
   <nav class="header-nav">
     <a href="/manage">Feeds</a>
     <ThemeToggle />
+    <button class="logout-btn" id="logout-btn" aria-label="Log out">Logout</button>
   </nav>
 </header>
+
+<script>
+  document.getElementById('logout-btn')?.addEventListener('click', () => {
+    const w = window as any;
+    if (w.netlifyIdentity) {
+      w.netlifyIdentity.logout();
+      w.netlifyIdentity.on('logout', () => {
+        window.location.replace('/login');
+      });
+    } else {
+      localStorage.removeItem('gotrue.user');
+      window.location.replace('/login');
+    }
+  });
+</script>

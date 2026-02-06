@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rss-reader-v3';
+const CACHE_NAME = 'rss-reader-v4';
 const STATIC_ASSETS = ['/', '/manifest.json'];
 
 // Install: cache static assets
@@ -28,6 +28,7 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests and netlify functions
   if (event.request.method !== 'GET') return;
   if (event.request.url.includes('/.netlify/')) return;
+  if (event.request.url.includes('identity.netlify.com')) return;
 
   if (event.request.mode === 'navigate') {
     // HTML pages: network first, fall back to cache

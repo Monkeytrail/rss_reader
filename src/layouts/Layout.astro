@@ -35,6 +35,22 @@ const buildTime = new Date().toISOString();
       const t = localStorage.getItem('theme');
       if (t) document.documentElement.setAttribute('data-theme', t);
     </script>
+
+    <script is:inline>
+      // Auth gate: redirect to /login if not authenticated
+      if (window.location.pathname !== '/login') {
+        try {
+          const user = localStorage.getItem('gotrue.user');
+          if (!user || user === 'null') {
+            window.location.replace('/login');
+          }
+        } catch (e) {
+          window.location.replace('/login');
+        }
+      }
+    </script>
+
+    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   </head>
   <body>
     <slot />
@@ -83,6 +99,17 @@ const buildTime = new Date().toISOString();
         markAsRead(card.dataset.articleId!);
         card.classList.add('is-read');
       });
+
+      // Handle Netlify Identity confirmation/recovery tokens in URL hash
+      if (window.location.hash) {
+        const hash = window.location.hash;
+        if (hash.includes('confirmation_token') || hash.includes('recovery_token') || hash.includes('invite_token')) {
+          const w = window as any;
+          if (w.netlifyIdentity) {
+            w.netlifyIdentity.open();
+          }
+        }
+      }
     </script>
   </body>
 </html>

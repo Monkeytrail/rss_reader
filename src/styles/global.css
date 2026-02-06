@@ -443,6 +443,21 @@ h2 {
   background: var(--color-bg-secondary);
 }
 
+/* ===== Logout ===== */
+.logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  padding: var(--space-xs) 0;
+  transition: color 0.15s;
+}
+
+.logout-btn:hover {
+  color: var(--color-accent);
+}
+
 /* ===== Add Feed ===== */
 .add-feed {
   margin-block: var(--space-lg);
