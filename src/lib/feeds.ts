@@ -129,6 +129,16 @@ let cachedArticles: Article[] | null = null;
 // Cache raw parsed feed data for getFeedMetadata
 let cachedParsedFeeds: Map<string, any> | null = null;
 
+// Cache feed errors during build
+let cachedFeedErrors: Map<string, string> = new Map();
+
+export interface FeedError {
+  url: string;
+  title: string;
+  category: string;
+  error: string;
+}
+
 export async function fetchAllFeeds(): Promise<Article[]> {
   if (cachedArticles) return cachedArticles;
 
@@ -188,7 +198,9 @@ export async function fetchAllFeeds(): Promise<Article[]> {
 
         return feedArticles;
       } catch (error) {
-        console.error(`Failed to fetch ${feed.title}: ${error}`);
+        const msg = error instanceof Error ? error.message : String(error);
+        console.error(`Failed to fetch ${feed.title}: ${msg}`);
+        cachedFeedErrors.set(feed.url, msg);
         return [];
       }
     }),
@@ -201,7 +213,62 @@ export async function fetchAllFeeds(): Promise<Article[]> {
   }
 
   cachedArticles = articles.sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
+
+  // Record feed health snapshot to Turso (build-time only)
+  if (typeof window === 'undefined') {
+    await recordFeedHealthSnapshot(sources);
+  }
+
   return cachedArticles;
+}
+
+async function recordFeedHealthSnapshot(sources: FeedSource[]): Promise<void> {
+  try {
+    const { getDb, initSchema } = await import('./discovery/db');
+    await initSchema();
+    const db = getDb();
+
+    const buildTime = new Date().toISOString();
+    const statements = [];
+
+    for (const source of sources) {
+      const parsed = cachedParsedFeeds?.get(source.url);
+      const errorMsg = cachedFeedErrors.get(source.url);
+
+      let status: 'success' | 'error' | 'quiet' = 'success';
+      let articleCount = 0;
+      let lastArticleDate: string | null = null;
+
+      if (errorMsg) {
+        status = 'error';
+      } else if (parsed) {
+        articleCount = parsed.items?.length || 0;
+        if (parsed.items && parsed.items.length > 0) {
+          const dates = parsed.items
+            .map((item: any) => new Date(item.pubDate || item.isoDate || 0))
+            .filter((d: Date) => !isNaN(d.getTime()) && d.getTime() > 0)
+            .sort((a: Date, b: Date) => b.getTime() - a.getTime());
+          if (dates[0]) {
+            lastArticleDate = dates[0].toISOString();
+            if (Math.floor((Date.now() - dates[0].getTime()) / 86400000) > QUIET_THRESHOLD_DAYS) {
+              status = 'quiet';
+            }
+          }
+        }
+      }
+
+      statements.push({
+        sql: `INSERT INTO feed_health_snapshots (feed_url, build_time, status, error_message, article_count, last_article_date) VALUES (?, ?, ?, ?, ?, ?)`,
+        args: [source.url, buildTime, status, errorMsg || null, articleCount, lastArticleDate],
+      });
+    }
+
+    if (statements.length > 0) {
+      await db.batch(statements);
+    }
+  } catch (error) {
+    console.error('Failed to record feed health:', error);
+  }
 }
 
 export async function getCategories() {
@@ -265,4 +332,23 @@ export async function getFeedMetadata(): Promise<FeedMeta[]> {
   }
 
   return metadata;
+}
+
+export async function getFeedErrors(): Promise<FeedError[]> {
+  await fetchAllFeeds();
+
+  const sources = await getAllFeedSources();
+  const errors: FeedError[] = [];
+
+  for (const [url, errorMsg] of cachedFeedErrors.entries()) {
+    const source = sources.find((s) => s.url === url);
+    errors.push({
+      url,
+      title: source?.title || url,
+      category: source?.category || 'Unknown',
+      error: errorMsg,
+    });
+  }
+
+  return errors;
 }

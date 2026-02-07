@@ -1,10 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
-import { getFeedMetadata } from '../lib/feeds';
+import { getFeedMetadata, getFeedErrors } from '../lib/feeds';
 import feedsConfig from '../data/feeds.json';
 
 const feeds = await getFeedMetadata();
+const feedErrors = await getFeedErrors();
 
 // Group feed metadata by category (preserving feeds.json order)
 const feedsByCategory = new Map<string, typeof feeds>();
@@ -34,6 +35,25 @@ function formatLastSeen(date: Date | null): string {
 
   <main class="manage-page container">
     <h1>Manage Feeds</h1>
+
+    {feedErrors.length > 0 && (
+      <section class="feed-errors-section">
+        <h2>Feed Errors ({feedErrors.length})</h2>
+        <p class="section-description">These feeds failed to load during the last build.</p>
+        <ul class="feed-list">
+          {feedErrors.map((err) => (
+            <li class="feed-item feed-error-item">
+              <div class="feed-info">
+                <span class="feed-title">{err.title}</span>
+                <span class="feed-meta">{err.category}</span>
+                <code class="feed-error-message">{err.error}</code>
+              </div>
+              <a href={err.url} target="_blank" rel="noopener noreferrer" class="btn-secondary">Check</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
 
     <div id="hidden-feeds-section" class="hidden-feeds-section" hidden>
       <h2>Hidden feeds (<span id="hidden-count">0</span>)</h2>
@@ -106,6 +126,13 @@ function formatLastSeen(date: Date | null): string {
         </div>
         <p class="form-note">Custom feeds are saved locally in your browser.</p>
       </form>
+    </section>
+
+    <section class="feed-health-section">
+      <h2>Feed Health</h2>
+      <p class="section-description">Reliability over recent builds.</p>
+      <div id="health-loading" class="feed-meta">Loading health data...</div>
+      <div id="health-dashboard" hidden></div>
     </section>
 
     <section class="manage-actions">
@@ -280,12 +307,100 @@ function formatLastSeen(date: Date | null): string {
     const text = await file.text();
     const preview = document.getElementById('import-preview')!;
 
-    const matches = text.matchAll(/xmlUrl="([^"]+)"/g);
-    const urls = Array.from(matches).map((m) => m[1]);
+    // Parse feeds from OPML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, 'application/xml');
+    const outlines = doc.querySelectorAll('outline[xmlUrl]');
+
+    const feeds: { title: string; url: string; category: string }[] = [];
+    outlines.forEach((outline) => {
+      const url = outline.getAttribute('xmlUrl')!;
+      const title = outline.getAttribute('title') || outline.getAttribute('text') || new URL(url).hostname;
+      const parent = outline.parentElement;
+      const category = parent?.tagName === 'outline'
+        ? (parent.getAttribute('title') || parent.getAttribute('text') || 'Custom')
+        : 'Custom';
+      feeds.push({ title, url, category });
+    });
+
+    if (feeds.length === 0) {
+      preview.innerHTML = '<p>No feeds found in this OPML file.</p>';
+      return;
+    }
+
+    // Show preview with import button
+    const existingUrls = new Set(getCustomFeeds().map((f) => f.url));
+    const newFeeds = feeds.filter((f) => !existingUrls.has(f.url));
 
     preview.innerHTML = `
-      <p>Found: ${urls.length} feeds</p>
-      <p class="section-description">Copy the OPML file to <code>public/opml/</code> in your repo and rebuild.</p>
+      <p>Found ${feeds.length} feed${feeds.length === 1 ? '' : 's'}${newFeeds.length < feeds.length ? ` (${feeds.length - newFeeds.length} already added)` : ''}.</p>
+      ${newFeeds.length > 0 ? `<button id="confirm-import" class="btn-primary">Import ${newFeeds.length} feed${newFeeds.length === 1 ? '' : 's'}</button>` : '<p class="section-description">All feeds already imported.</p>'}
     `;
+
+    document.getElementById('confirm-import')?.addEventListener('click', () => {
+      for (const feed of newFeeds) {
+        addCustomFeed(feed.url, feed.title, feed.category);
+      }
+      preview.innerHTML = `<p>Imported ${newFeeds.length} feed${newFeeds.length === 1 ? '' : 's'}.</p>`;
+      renderCustomFeeds();
+    });
+
+    // Reset file input so the same file can be re-selected
+    (e.target as HTMLInputElement).value = '';
   });
+
+  // Feed Health Dashboard
+  async function loadFeedHealth() {
+    try {
+      const response = await fetch('/.netlify/functions/get-feed-health');
+      if (!response.ok) throw new Error('Failed');
+
+      const healthData: Record<string, { status: string; errorMessage: string | null }[]> = await response.json();
+      const dashboard = document.getElementById('health-dashboard')!;
+      const loading = document.getElementById('health-loading')!;
+
+      loading.hidden = true;
+      dashboard.hidden = false;
+
+      if (Object.keys(healthData).length === 0) {
+        dashboard.innerHTML = '<p class="feed-meta">No health data yet. Data appears after the first build with Turso configured.</p>';
+        return;
+      }
+
+      // Only show feeds with issues
+      const issues: string[] = [];
+      for (const [feedUrl, snapshots] of Object.entries(healthData)) {
+        const recent = snapshots.slice(0, 5);
+        const errorCount = recent.filter((s) => s.status === 'error').length;
+        const quietCount = recent.filter((s) => s.status === 'quiet').length;
+
+        if (errorCount === 0 && quietCount === 0) continue;
+
+        let cls = 'health-quiet';
+        let msg = 'No recent articles';
+        if (errorCount >= 3) {
+          cls = 'health-critical';
+          msg = `Failed ${errorCount} of last ${recent.length} builds`;
+        } else if (errorCount > 0) {
+          cls = 'health-warning';
+          msg = `${errorCount} error${errorCount === 1 ? '' : 's'} in last ${recent.length} builds`;
+        }
+
+        const feedItem = document.querySelector<HTMLElement>(`.feed-item[data-feed-url="${CSS.escape(feedUrl)}"]`);
+        const title = feedItem?.querySelector('.feed-title')?.textContent || new URL(feedUrl).hostname;
+
+        issues.push(`<div class="health-item ${cls}"><span class="health-dot"></span><span class="health-title">${title}</span><span class="health-status">${msg}</span></div>`);
+      }
+
+      if (issues.length === 0) {
+        dashboard.innerHTML = '<p class="feed-meta">All feeds healthy across recent builds.</p>';
+      } else {
+        dashboard.innerHTML = `<div class="health-grid">${issues.join('')}</div>`;
+      }
+    } catch {
+      document.getElementById('health-loading')!.textContent = 'Health data unavailable.';
+    }
+  }
+
+  loadFeedHealth();
 </script>

@@ -49,6 +49,7 @@ const trimmedSummary = summary ? truncate(summary, 160) : '';
   </div>
   {trimmedSummary && <p class="article-summary">{trimmedSummary}</p>}
   <div class="article-actions">
+    <button class="action-button bookmark-button" aria-label="Bookmark"><span class="bookmark-icon">&#9734;</span> Save</button>
     <button class="action-button read-in-app" data-url={link}>Read in app</button>
   </div>
 </article>

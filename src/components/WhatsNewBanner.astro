@@ -1,0 +1,109 @@
+---
+---
+
+<div id="whats-new-banner" class="whats-new-banner" hidden>
+  <span id="new-count-text" class="banner-text"></span>
+  <button id="scroll-to-new" class="btn-secondary banner-btn">Show first new</button>
+  <button id="dismiss-banner" class="banner-close" aria-label="Dismiss">&times;</button>
+</div>
+
+<script>
+  function checkForNewArticles() {
+    const raw = localStorage.getItem('rss-reader-pre-refresh-snapshot');
+    if (!raw) return;
+
+    localStorage.removeItem('rss-reader-pre-refresh-snapshot');
+
+    try {
+      const { articleIds: oldIds, timestamp } = JSON.parse(raw);
+
+      // Only show if snapshot is < 5 minutes old
+      if (Date.now() - timestamp > 300000) return;
+
+      const oldSet = new Set<string>(oldIds);
+      const newArticles: HTMLElement[] = [];
+
+      document.querySelectorAll<HTMLElement>('[data-article-id]').forEach((card) => {
+        if (!oldSet.has(card.dataset.articleId!)) {
+          newArticles.push(card);
+        }
+      });
+
+      if (newArticles.length === 0) return;
+
+      const banner = document.getElementById('whats-new-banner')!;
+      document.getElementById('new-count-text')!.textContent =
+        `${newArticles.length} new article${newArticles.length === 1 ? '' : 's'}`;
+      banner.hidden = false;
+
+      newArticles.forEach((card) => card.classList.add('new-article'));
+
+      document.getElementById('scroll-to-new')?.addEventListener('click', () => {
+        // Unhide the day group if it's hidden
+        const group = newArticles[0].closest<HTMLElement>('.day-group');
+        if (group) group.hidden = false;
+        newArticles[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+
+      document.getElementById('dismiss-banner')?.addEventListener('click', () => {
+        banner.hidden = true;
+        document.querySelectorAll('.new-article').forEach((el) => el.classList.remove('new-article'));
+      });
+    } catch {}
+  }
+
+  checkForNewArticles();
+</script>
+
+<style>
+  .whats-new-banner {
+    position: fixed;
+    top: 4rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--color-bg-secondary);
+    border: 2px solid var(--color-accent);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideDown 0.3s ease-out;
+  }
+
+  .whats-new-banner[hidden] {
+    display: none;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  .banner-text {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .banner-btn {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+    white-space: nowrap;
+  }
+
+  .banner-close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    padding: 0 0.25rem;
+    line-height: 1;
+  }
+
+  .banner-close:hover {
+    color: var(--color-text-primary);
+  }
+</style>

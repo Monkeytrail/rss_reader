@@ -4,6 +4,7 @@ import Header from '../components/Header.astro';
 import CategoryNav from '../components/CategoryNav.astro';
 import ArticleCard from '../components/ArticleCard.astro';
 import AddFeed from '../components/AddFeed.astro';
+import WhatsNewBanner from '../components/WhatsNewBanner.astro';
 import { fetchAllFeeds } from '../lib/feeds';
 import { getDayLabel } from '../lib/utils';
 
@@ -23,12 +24,13 @@ for (const article of articles) {
 
 <Layout title="RSS Reader">
   <Header />
+  <WhatsNewBanner />
   <CategoryNav />
 
   <main class="container">
     <div class="article-list">
-      {[...dayGroups.entries()].map(([dayLabel, dayArticles]) => (
-        <section class="day-group">
+      {[...dayGroups.entries()].map(([dayLabel, dayArticles], index) => (
+        <section class="day-group" data-day-index={index} hidden={index >= 3}>
           <h2 class="day-label">{dayLabel}</h2>
           {dayArticles.map((article) => (
             <ArticleCard
@@ -47,6 +49,14 @@ for (const article of articles) {
           ))}
         </section>
       ))}
+
+      {dayGroups.size > 3 && (
+        <div class="load-more-container">
+          <button id="load-more-btn" class="btn-secondary load-more-btn">
+            Show older ({dayGroups.size - 3} more days)
+          </button>
+        </div>
+      )}
     </div>
 
     <AddFeed />
@@ -55,6 +65,7 @@ for (const article of articles) {
   <script>
     // Hide feeds the user has removed
     import { getCustomFeeds, getHiddenFeeds } from '../lib/customFeeds';
+    import { escapeHtml } from '../lib/utils';
 
     const hiddenUrls = new Set(getHiddenFeeds());
     if (hiddenUrls.size > 0) {
@@ -143,12 +154,61 @@ for (const article of articles) {
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
-    function escapeHtml(text: string): string {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
+    loadCustomFeeds();
+
+    // Saved articles filter (activated via /#saved)
+    import { getAllBookmarks } from '../lib/bookmarks';
+
+    function applySavedFilter() {
+      const isSaved = window.location.hash === '#saved';
+      const savedLink = document.querySelector('.saved-link');
+
+      if (isSaved) {
+        const bookmarks = new Set(getAllBookmarks());
+        document.querySelectorAll<HTMLElement>('.article-card[data-article-id]').forEach((card) => {
+          card.style.display = bookmarks.has(card.dataset.articleId!) ? '' : 'none';
+        });
+        document.querySelectorAll<HTMLElement>('.day-group').forEach((group) => {
+          const visible = group.querySelectorAll('.article-card:not([style*="display: none"])');
+          group.style.display = visible.length > 0 ? '' : 'none';
+        });
+        if (savedLink) savedLink.classList.add('active-nav');
+      } else {
+        document.querySelectorAll<HTMLElement>('.article-card[data-article-id]').forEach((card) => {
+          card.style.display = '';
+        });
+        document.querySelectorAll<HTMLElement>('.day-group').forEach((group) => {
+          group.style.display = '';
+        });
+        if (savedLink) savedLink.classList.remove('active-nav');
+      }
     }
 
-    loadCustomFeeds();
+    applySavedFilter();
+    window.addEventListener('hashchange', applySavedFilter);
+
+    // Progressive loading of day groups
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (loadMoreBtn) {
+      const LOAD_INCREMENT = 5;
+      let currentlyVisible = 3;
+      const allDayGroups = document.querySelectorAll<HTMLElement>('.day-group[data-day-index]');
+      const totalDays = allDayGroups.length;
+
+      loadMoreBtn.addEventListener('click', () => {
+        const nextBatch = Math.min(currentlyVisible + LOAD_INCREMENT, totalDays);
+        for (let i = currentlyVisible; i < nextBatch; i++) {
+          allDayGroups[i].hidden = false;
+        }
+        currentlyVisible = nextBatch;
+
+        const remaining = totalDays - currentlyVisible;
+        if (remaining <= 0) {
+          loadMoreBtn.style.display = 'none';
+        } else {
+          loadMoreBtn.textContent = `Show older (${remaining} more day${remaining === 1 ? '' : 's'})`;
+        }
+      });
+    }
   </script>
 </Layout>

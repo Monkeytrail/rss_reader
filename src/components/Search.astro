@@ -28,9 +28,11 @@
     }
   });
 
+  let debounceTimer: ReturnType<typeof setTimeout>;
   searchInput.addEventListener('input', (e) => {
     const query = (e.target as HTMLInputElement).value;
-    filterArticles(query);
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => filterArticles(query), 150);
   });
 
   function filterArticles(query: string) {

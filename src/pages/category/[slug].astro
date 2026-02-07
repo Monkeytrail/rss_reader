@@ -40,8 +40,8 @@ for (const article of articles) {
     <h1>{categoryName}</h1>
 
     <div class="article-list">
-      {[...dayGroups.entries()].map(([dayLabel, dayArticles]) => (
-        <section class="day-group">
+      {[...dayGroups.entries()].map(([dayLabel, dayArticles], index) => (
+        <section class="day-group" data-day-index={index} hidden={index >= 3}>
           <h2 class="day-label">{dayLabel}</h2>
           {dayArticles.map((article) => (
             article.mediaType === 'video' ? (
@@ -77,10 +77,43 @@ for (const article of articles) {
           ))}
         </section>
       ))}
+
+      {dayGroups.size > 3 && (
+        <div class="load-more-container">
+          <button id="load-more-btn" class="btn-secondary load-more-btn">
+            Show older ({dayGroups.size - 3} more days)
+          </button>
+        </div>
+      )}
     </div>
 
     {articles.length === 0 && (
       <p class="no-results">No articles found in this category.</p>
     )}
   </main>
+
+  <script>
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (loadMoreBtn) {
+      const LOAD_INCREMENT = 5;
+      let currentlyVisible = 3;
+      const allDayGroups = document.querySelectorAll<HTMLElement>('.day-group[data-day-index]');
+      const totalDays = allDayGroups.length;
+
+      loadMoreBtn.addEventListener('click', () => {
+        const nextBatch = Math.min(currentlyVisible + LOAD_INCREMENT, totalDays);
+        for (let i = currentlyVisible; i < nextBatch; i++) {
+          allDayGroups[i].hidden = false;
+        }
+        currentlyVisible = nextBatch;
+
+        const remaining = totalDays - currentlyVisible;
+        if (remaining <= 0) {
+          loadMoreBtn.style.display = 'none';
+        } else {
+          loadMoreBtn.textContent = `Show older (${remaining} more day${remaining === 1 ? '' : 's'})`;
+        }
+      });
+    }
+  </script>
 </Layout>

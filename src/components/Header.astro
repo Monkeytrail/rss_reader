@@ -12,6 +12,7 @@ import RefreshButton from './RefreshButton.astro';
   <nav class="header-nav">
     <RefreshButton />
     <a href="/discover">Discover</a>
+    <a href="/#saved" class="saved-link">Saved <span id="bookmark-count" class="badge"></span></a>
     <a href="/manage">Feeds</a>
     <ThemeToggle />
     <button class="logout-btn" id="logout-btn" aria-label="Log out">Logout</button>
@@ -19,6 +20,24 @@ import RefreshButton from './RefreshButton.astro';
 </header>
 
 <script>
+  import { getBookmarkCount } from '../lib/bookmarks';
+
+  function updateBookmarkBadge() {
+    const badge = document.getElementById('bookmark-count');
+    if (badge) {
+      const count = getBookmarkCount();
+      badge.textContent = count > 0 ? String(count) : '';
+    }
+  }
+
+  updateBookmarkBadge();
+
+  document.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('.bookmark-button')) {
+      setTimeout(updateBookmarkBadge, 0);
+    }
+  });
+
   document.getElementById('logout-btn')?.addEventListener('click', () => {
     const w = window as any;
     if (w.netlifyIdentity) {

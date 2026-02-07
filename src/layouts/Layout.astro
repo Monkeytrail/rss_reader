@@ -65,7 +65,26 @@ const buildTime = new Date().toISOString();
           })
         }</time>
       </p>
+      <button id="shortcuts-help-btn" class="shortcuts-help-btn" aria-label="Keyboard shortcuts">Shortcuts (?)</button>
     </footer>
+
+    <div id="shortcuts-modal" class="shortcuts-modal" hidden>
+      <div class="shortcuts-content">
+        <h3>Keyboard Shortcuts</h3>
+        <dl class="shortcuts-list">
+          <div><dt>j</dt><dd>Next article</dd></div>
+          <div><dt>k</dt><dd>Previous article</dd></div>
+          <div><dt>o / Enter</dt><dd>Open article</dd></div>
+          <div><dt>r</dt><dd>Read in app</dd></div>
+          <div><dt>b</dt><dd>Toggle bookmark</dd></div>
+          <div><dt>m</dt><dd>Toggle read/unread</dd></div>
+          <div><dt>/</dt><dd>Focus search</dd></div>
+          <div><dt>Esc</dt><dd>Clear focus / Close</dd></div>
+          <div><dt>?</dt><dd>Toggle this panel</dd></div>
+        </dl>
+        <button class="btn-secondary" id="close-shortcuts">Close</button>
+      </div>
+    </div>
 
     <ReaderModal />
     <VideoPlayerModal />
@@ -79,12 +98,54 @@ const buildTime = new Date().toISOString();
       }
 
       // Read status tracking
-      import { isRead, markAsRead } from '../lib/readStatus';
+      import { isRead, markAsRead, markAsUnread } from '../lib/readStatus';
+      import { pullRemoteState } from '../lib/syncState';
 
-      // Mark already-read articles on load
+      // Mark already-read articles on load (from localStorage)
       document.querySelectorAll<HTMLElement>('[data-article-id]').forEach((card) => {
         if (isRead(card.dataset.articleId!)) {
           card.classList.add('is-read');
+        }
+      });
+
+      // Sync remote state (merge Turso → localStorage → DOM)
+      pullRemoteState().then((remote) => {
+        if (!remote) return;
+
+        let changed = false;
+        const readKey = 'rss-reader-read-articles';
+        const bookmarkKey = 'rss-reader-bookmarked-articles';
+
+        // Merge remote reads
+        const localReads = new Set<string>(JSON.parse(localStorage.getItem(readKey) || '[]'));
+        for (const id of remote.readArticles) {
+          if (!localReads.has(id)) { localReads.add(id); changed = true; }
+        }
+        if (changed) localStorage.setItem(readKey, JSON.stringify([...localReads]));
+
+        // Merge remote bookmarks
+        let bmChanged = false;
+        const localBookmarks = new Set<string>(JSON.parse(localStorage.getItem(bookmarkKey) || '[]'));
+        for (const id of remote.bookmarks) {
+          if (!localBookmarks.has(id)) { localBookmarks.add(id); bmChanged = true; }
+        }
+        if (bmChanged) localStorage.setItem(bookmarkKey, JSON.stringify([...localBookmarks]));
+
+        // Re-apply to DOM if anything was merged
+        if (changed || bmChanged) {
+          document.querySelectorAll<HTMLElement>('[data-article-id]').forEach((card) => {
+            const id = card.dataset.articleId!;
+            if (localReads.has(id)) card.classList.add('is-read');
+            if (localBookmarks.has(id)) {
+              card.classList.add('is-bookmarked');
+              const btn = card.querySelector('.bookmark-button');
+              if (btn) {
+                const icon = btn.querySelector('.bookmark-icon');
+                if (icon) icon.textContent = '\u2605';
+                btn.lastChild!.textContent = ' Saved';
+              }
+            }
+          });
         }
       });
 
@@ -100,6 +161,174 @@ const buildTime = new Date().toISOString();
 
         markAsRead(card.dataset.articleId!);
         card.classList.add('is-read');
+      });
+
+      // Mark as unread on right-click
+      document.addEventListener('contextmenu', (e) => {
+        const card = (e.target as Element).closest<HTMLElement>('[data-article-id]');
+        if (!card || !card.classList.contains('is-read')) return;
+
+        e.preventDefault();
+        markAsUnread(card.dataset.articleId!);
+        card.classList.remove('is-read');
+      });
+
+      // Bookmark handling
+      import { isBookmarked, addBookmark, removeBookmark } from '../lib/bookmarks';
+
+      document.querySelectorAll<HTMLElement>('[data-article-id]').forEach((card) => {
+        if (isBookmarked(card.dataset.articleId!)) {
+          card.classList.add('is-bookmarked');
+          const btn = card.querySelector('.bookmark-button');
+          if (btn) {
+            const icon = btn.querySelector('.bookmark-icon');
+            if (icon) icon.textContent = '\u2605';
+            btn.lastChild!.textContent = ' Saved';
+          }
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        const btn = (e.target as Element).closest('.bookmark-button');
+        if (!btn) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const card = btn.closest<HTMLElement>('[data-article-id]');
+        if (!card) return;
+
+        const articleId = card.dataset.articleId!;
+        const icon = btn.querySelector('.bookmark-icon');
+
+        if (isBookmarked(articleId)) {
+          removeBookmark(articleId);
+          card.classList.remove('is-bookmarked');
+          if (icon) icon.textContent = '\u2606';
+          btn.lastChild!.textContent = ' Save';
+        } else {
+          addBookmark(articleId);
+          card.classList.add('is-bookmarked');
+          if (icon) icon.textContent = '\u2605';
+          btn.lastChild!.textContent = ' Saved';
+        }
+      });
+
+      // j/k Keyboard Navigation
+      let focusedIndex = -1;
+
+      function getVisibleArticles(): HTMLElement[] {
+        return Array.from(
+          document.querySelectorAll<HTMLElement>('.article-card:not([style*="display: none"])')
+        );
+      }
+
+      function focusArticle(index: number) {
+        const articles = getVisibleArticles();
+        document.querySelectorAll('.keyboard-focused').forEach((el) => el.classList.remove('keyboard-focused'));
+
+        if (index < 0 || index >= articles.length) return;
+
+        articles[index].classList.add('keyboard-focused');
+        articles[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        focusedIndex = index;
+      }
+
+      document.addEventListener('keydown', (e) => {
+        const tag = (document.activeElement?.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea') return;
+
+        const readerModal = document.getElementById('reader-modal');
+        const videoModal = document.getElementById('video-player-modal');
+        if (readerModal && !readerModal.hidden) return;
+        if (videoModal && !videoModal.hidden) return;
+
+        const shortcutsModal = document.getElementById('shortcuts-modal');
+
+        switch (e.key) {
+          case 'j': {
+            e.preventDefault();
+            const articles = getVisibleArticles();
+            if (articles.length === 0) break;
+            focusArticle(focusedIndex < articles.length - 1 ? focusedIndex + 1 : focusedIndex);
+            break;
+          }
+          case 'k': {
+            e.preventDefault();
+            if (focusedIndex > 0) focusArticle(focusedIndex - 1);
+            break;
+          }
+          case 'o':
+          case 'Enter': {
+            if (focusedIndex === -1) break;
+            e.preventDefault();
+            const articles = getVisibleArticles();
+            const link = articles[focusedIndex]?.querySelector<HTMLAnchorElement>('.article-title a');
+            if (link) link.click();
+            break;
+          }
+          case 'r': {
+            if (focusedIndex === -1) break;
+            e.preventDefault();
+            const articles = getVisibleArticles();
+            const readBtn = articles[focusedIndex]?.querySelector<HTMLButtonElement>('.read-in-app');
+            if (readBtn) readBtn.click();
+            break;
+          }
+          case 'b': {
+            if (focusedIndex === -1) break;
+            e.preventDefault();
+            const articles = getVisibleArticles();
+            const bookmarkBtn = articles[focusedIndex]?.querySelector<HTMLButtonElement>('.bookmark-button');
+            if (bookmarkBtn) bookmarkBtn.click();
+            break;
+          }
+          case 'm': {
+            if (focusedIndex === -1) break;
+            e.preventDefault();
+            const articles = getVisibleArticles();
+            const article = articles[focusedIndex];
+            const articleId = article?.dataset.articleId;
+            if (articleId) {
+              if (isRead(articleId)) {
+                markAsUnread(articleId);
+                article.classList.remove('is-read');
+              } else {
+                markAsRead(articleId);
+                article.classList.add('is-read');
+              }
+            }
+            break;
+          }
+          case '?': {
+            e.preventDefault();
+            if (shortcutsModal) shortcutsModal.hidden = !shortcutsModal.hidden;
+            break;
+          }
+          case 'Escape': {
+            if (shortcutsModal && !shortcutsModal.hidden) {
+              shortcutsModal.hidden = true;
+              break;
+            }
+            if (focusedIndex !== -1) {
+              e.preventDefault();
+              document.querySelectorAll('.keyboard-focused').forEach((el) => el.classList.remove('keyboard-focused'));
+              focusedIndex = -1;
+            }
+            break;
+          }
+        }
+      });
+
+      // Shortcuts panel
+      document.getElementById('shortcuts-help-btn')?.addEventListener('click', () => {
+        const modal = document.getElementById('shortcuts-modal');
+        if (modal) modal.hidden = !modal.hidden;
+      });
+
+      document.getElementById('close-shortcuts')?.addEventListener('click', () => {
+        const modal = document.getElementById('shortcuts-modal');
+        if (modal) modal.hidden = true;
       });
 
       // Handle Netlify Identity confirmation/recovery tokens in URL hash

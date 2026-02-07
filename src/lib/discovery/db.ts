@@ -54,5 +54,29 @@ export async function initSchema(): Promise<void> {
     `CREATE INDEX IF NOT EXISTS idx_domains_status ON discovered_domains(status)`,
     `CREATE INDEX IF NOT EXISTS idx_domains_score ON discovered_domains(current_score DESC)`,
     `CREATE INDEX IF NOT EXISTS idx_events_domain ON domain_events(domain_id)`,
+    `CREATE TABLE IF NOT EXISTS user_read_articles (
+      user_id TEXT NOT NULL,
+      article_id TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (user_id, article_id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS user_bookmarks (
+      user_id TEXT NOT NULL,
+      article_id TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      PRIMARY KEY (user_id, article_id)
+    )`,
+    `CREATE TABLE IF NOT EXISTS feed_health_snapshots (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      feed_url TEXT NOT NULL,
+      build_time TEXT NOT NULL DEFAULT (datetime('now')),
+      status TEXT NOT NULL CHECK (status IN ('success', 'error', 'quiet')),
+      error_message TEXT,
+      article_count INTEGER NOT NULL DEFAULT 0,
+      last_article_date TEXT
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_user_read ON user_read_articles(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_user_bookmarks ON user_bookmarks(user_id)`,
+    `CREATE INDEX IF NOT EXISTS idx_feed_health ON feed_health_snapshots(feed_url, build_time DESC)`,
   ]);
 }

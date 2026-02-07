@@ -27,7 +27,19 @@
 
       if (response.ok) {
         btn.querySelector('.refresh-text')!.textContent = 'Building...';
-        setTimeout(() => window.location.reload(), 90000);
+
+        // Snapshot current article IDs for "what's new" comparison
+        const ids: string[] = [];
+        document.querySelectorAll<HTMLElement>('[data-article-id]').forEach((el) => {
+          ids.push(el.dataset.articleId!);
+        });
+        localStorage.setItem('rss-reader-pre-refresh-snapshot', JSON.stringify({
+          articleIds: ids,
+          timestamp: Date.now(),
+        }));
+
+        const REBUILD_WAIT_MS = 90_000; // 90 seconds
+        setTimeout(() => window.location.reload(), REBUILD_WAIT_MS);
       } else {
         throw new Error('Rebuild failed');
       }

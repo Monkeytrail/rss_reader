@@ -60,9 +60,17 @@ export function truncate(text: string, maxLength: number): string {
   return text.slice(0, maxLength).replace(/\s+\S*$/, '') + '...';
 }
 
+const WORDS_PER_MINUTE = 200;
+
 export function calculateReadingTime(text: string | undefined): number {
   if (!text) return 0;
   const plainText = text.replace(/<[^>]*>/g, '');
   const words = plainText.trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.ceil(words / 200));
+  return Math.max(1, Math.ceil(words / WORDS_PER_MINUTE));
+}
+
+export function escapeHtml(text: string): string {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
