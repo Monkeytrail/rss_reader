@@ -8,6 +8,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.0",
     "@mozilla/readability": "^0.6.0",
     "@types/jsdom": "^21.1.7",
     "astro": "^5.17.1",
