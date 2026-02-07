@@ -1,0 +1,74 @@
+---
+// Server-side: nothing needed
+---
+
+<button id="refresh-btn" class="refresh-button" aria-label="Refresh feeds">
+  <span class="refresh-icon">&#8635;</span>
+  <span class="refresh-text">Refresh</span>
+</button>
+
+<script>
+  const btn = document.getElementById('refresh-btn')!;
+
+  btn.addEventListener('click', async () => {
+    const confirmed = confirm(
+      'This triggers a rebuild. New articles will appear in ~1-2 minutes. Continue?'
+    );
+
+    if (!confirmed) return;
+
+    btn.classList.add('loading');
+    btn.setAttribute('disabled', 'true');
+
+    try {
+      const response = await fetch('/.netlify/functions/trigger-rebuild', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        btn.querySelector('.refresh-text')!.textContent = 'Building...';
+        setTimeout(() => window.location.reload(), 90000);
+      } else {
+        throw new Error('Rebuild failed');
+      }
+    } catch (error) {
+      alert('Could not trigger rebuild.');
+      btn.classList.remove('loading');
+      btn.removeAttribute('disabled');
+    }
+  });
+</script>
+
+<style>
+  .refresh-button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .refresh-button:hover:not([disabled]) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .refresh-button[disabled] {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  .refresh-button.loading .refresh-icon {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>

@@ -28,6 +28,11 @@ export function addCustomFeed(
 ): CustomFeed {
   const feeds = getCustomFeeds();
 
+  // Auto-detect YouTube category
+  if (url.includes('youtube.com')) {
+    category = 'YouTube';
+  }
+
   const newFeed: CustomFeed = {
     id: crypto.randomUUID(),
     title,

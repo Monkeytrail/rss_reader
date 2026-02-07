@@ -67,9 +67,32 @@
     e.preventDefault();
 
     const formData = new FormData(form);
-    const url = formData.get('url') as string;
+    let url = formData.get('url') as string;
     let title = formData.get('title') as string;
-    const category = (formData.get('category') as string) || 'Custom';
+    let category = (formData.get('category') as string) || 'Custom';
+
+    const isYouTube = url.includes('youtube.com/');
+
+    // Convert YouTube channel URL to feed URL
+    if (isYouTube && !url.includes('/feeds/')) {
+      try {
+        const response = await fetch(
+          `/.netlify/functions/youtube-channel-id?url=${encodeURIComponent(url)}`,
+        );
+        if (response.ok) {
+          const data = await response.json();
+          url = data.feedUrl;
+          if (!title) title = data.channelName;
+        }
+      } catch (error) {
+        console.error('Could not convert YouTube URL:', error);
+      }
+    }
+
+    // Auto-set YouTube category
+    if (isYouTube || url.includes('youtube.com/feeds/')) {
+      category = 'YouTube';
+    }
 
     if (!title) {
       try {

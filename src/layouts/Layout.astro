@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import ReaderModal from '../components/ReaderModal.astro';
+import VideoPlayerModal from '../components/VideoPlayerModal.astro';
 
 interface Props {
   title?: string;
@@ -67,6 +68,7 @@ const buildTime = new Date().toISOString();
     </footer>
 
     <ReaderModal />
+    <VideoPlayerModal />
 
     <script>
       // Register service worker and force update check

@@ -7,7 +7,8 @@ import AddFeed from '../components/AddFeed.astro';
 import { fetchAllFeeds } from '../lib/feeds';
 import { getDayLabel } from '../lib/utils';
 
-const articles = await fetchAllFeeds();
+const allItems = await fetchAllFeeds();
+const articles = allItems.filter(item => item.mediaType !== 'video');
 
 // Group articles by day
 const dayGroups = new Map<string, typeof articles>();

@@ -1,0 +1,143 @@
+---
+// Client-side controlled modal
+---
+
+<div id="video-modal" class="video-modal" hidden aria-modal="true" role="dialog">
+  <div class="video-backdrop"></div>
+
+  <div class="video-container">
+    <button class="video-close" aria-label="Close">&times;</button>
+    <h2 id="video-modal-title" class="video-modal-title"></h2>
+    <div class="video-wrapper">
+      <iframe
+        id="video-iframe"
+        src=""
+        title="YouTube video player"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+      ></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById('video-modal')!;
+  const backdrop = modal.querySelector('.video-backdrop')!;
+  const closeBtn = modal.querySelector('.video-close')!;
+  const iframe = document.getElementById('video-iframe') as HTMLIFrameElement;
+  const modalTitle = document.getElementById('video-modal-title')!;
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as Element;
+
+    const thumbnail = target.closest('.video-thumbnail');
+    if (thumbnail) {
+      e.preventDefault();
+      const videoId = (thumbnail as HTMLElement).dataset.videoId;
+      const title = thumbnail.closest('.video-card')?.querySelector('.video-title a')?.textContent || '';
+      if (videoId) openVideoPlayer(videoId, title);
+      return;
+    }
+
+    const playButton = target.closest('.play-in-app');
+    if (playButton) {
+      e.preventDefault();
+      const videoId = (playButton as HTMLElement).dataset.videoId;
+      const title = (playButton as HTMLElement).dataset.title || '';
+      if (videoId) openVideoPlayer(videoId, title);
+    }
+  });
+
+  function openVideoPlayer(videoId: string, title: string) {
+    iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
+    modalTitle.textContent = title;
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    closeBtn.focus();
+  }
+
+  function closeVideoPlayer() {
+    modal.hidden = true;
+    iframe.src = '';
+    document.body.style.overflow = '';
+  }
+
+  closeBtn.addEventListener('click', closeVideoPlayer);
+  backdrop.addEventListener('click', closeVideoPlayer);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.hidden) closeVideoPlayer();
+  });
+</script>
+
+<style>
+  .video-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-md);
+  }
+
+  .video-modal[hidden] {
+    display: none;
+  }
+
+  .video-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+  }
+
+  .video-container {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .video-close {
+    position: absolute;
+    top: calc(-1 * var(--space-xl));
+    right: 0;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    color: white;
+    font-size: 32px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+
+  .video-close:hover {
+    opacity: 1;
+  }
+
+  .video-modal-title {
+    color: white;
+    font-size: var(--font-size-lg);
+    margin: 0 0 var(--space-md) 0;
+    padding-right: 50px;
+  }
+
+  .video-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: black;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .video-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+</style>

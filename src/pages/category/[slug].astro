@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import Header from '../../components/Header.astro';
 import CategoryNav from '../../components/CategoryNav.astro';
 import ArticleCard from '../../components/ArticleCard.astro';
+import VideoCard from '../../components/VideoCard.astro';
 import { fetchAllFeeds, getCategories } from '../../lib/feeds';
 import { getDayLabel } from '../../lib/utils';
 
@@ -43,19 +44,36 @@ for (const article of articles) {
         <section class="day-group">
           <h2 class="day-label">{dayLabel}</h2>
           {dayArticles.map((article) => (
-            <ArticleCard
-              id={article.id}
-              title={article.title}
-              link={article.link}
-              pubDate={article.pubDate}
-              summary={article.summary}
-              feedUrl={article.feedUrl}
-              feedTitle={article.feedTitle}
-              feedFavicon={article.feedFavicon}
-              category={article.category}
-              categorySlug={article.categorySlug}
-              readingTime={article.readingTime}
-            />
+            article.mediaType === 'video' ? (
+              <VideoCard
+                id={article.id}
+                title={article.title}
+                link={article.link}
+                pubDate={article.pubDate}
+                summary={article.summary}
+                feedUrl={article.feedUrl}
+                feedTitle={article.feedTitle}
+                feedFavicon={article.feedFavicon}
+                category={article.category}
+                categorySlug={article.categorySlug}
+                thumbnail={article.thumbnail}
+                videoId={article.videoId}
+              />
+            ) : (
+              <ArticleCard
+                id={article.id}
+                title={article.title}
+                link={article.link}
+                pubDate={article.pubDate}
+                summary={article.summary}
+                feedUrl={article.feedUrl}
+                feedTitle={article.feedTitle}
+                feedFavicon={article.feedFavicon}
+                category={article.category}
+                categorySlug={article.categorySlug}
+                readingTime={article.readingTime}
+              />
+            )
           ))}
         </section>
       ))}

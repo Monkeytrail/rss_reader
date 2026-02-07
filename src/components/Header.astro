@@ -1,6 +1,7 @@
 ---
 import Search from './Search.astro';
 import ThemeToggle from './ThemeToggle.astro';
+import RefreshButton from './RefreshButton.astro';
 ---
 
 <header class="site-header">
@@ -9,6 +10,7 @@ import ThemeToggle from './ThemeToggle.astro';
   <Search />
 
   <nav class="header-nav">
+    <RefreshButton />
     <a href="/manage">Feeds</a>
     <ThemeToggle />
     <button class="logout-btn" id="logout-btn" aria-label="Log out">Logout</button>

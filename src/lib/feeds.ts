@@ -8,7 +8,38 @@ const parser = new Parser({
   headers: {
     'User-Agent': 'AstroRSSReader/1.0',
   },
+  customFields: {
+    item: [
+      ['media:group', 'mediaGroup'],
+      ['media:thumbnail', 'mediaThumbnail'],
+      ['yt:videoId', 'youtubeVideoId'],
+    ],
+  },
 });
+
+function isYouTubeFeed(feedUrl: string): boolean {
+  return feedUrl.includes('youtube.com/feeds');
+}
+
+function extractYouTubeData(item: any): { thumbnail?: string; videoId?: string } {
+  let thumbnail: string | undefined;
+  let videoId: string | undefined;
+
+  if (item.youtubeVideoId) {
+    videoId = item.youtubeVideoId;
+  } else if (item.link) {
+    const match = item.link.match(/[?&]v=([^&]+)/);
+    if (match) videoId = match[1];
+  }
+
+  if (item.mediaGroup?.['media:thumbnail']?.[0]?.['$']?.url) {
+    thumbnail = item.mediaGroup['media:thumbnail'][0]['$'].url;
+  } else if (videoId) {
+    thumbnail = `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`;
+  }
+
+  return { thumbnail, videoId };
+}
 
 export interface Article {
   id: string;
@@ -24,6 +55,9 @@ export interface Article {
   category: string;
   categorySlug: string;
   readingTime: number;
+  mediaType: 'article' | 'video';
+  thumbnail?: string;
+  videoId?: string;
 }
 
 export interface FeedSource {
@@ -93,7 +127,7 @@ export async function getAllFeedSources(): Promise<FeedSource[]> {
 let cachedArticles: Article[] | null = null;
 
 // Cache raw parsed feed data for getFeedMetadata
-let cachedParsedFeeds: Map<string, Parser.Output<Record<string, unknown>>> | null = null;
+let cachedParsedFeeds: Map<string, any> | null = null;
 
 export async function fetchAllFeeds(): Promise<Article[]> {
   if (cachedArticles) return cachedArticles;
@@ -108,14 +142,27 @@ export async function fetchAllFeeds(): Promise<Article[]> {
         const parsed = await parser.parseURL(feed.url);
         cachedParsedFeeds!.set(feed.url, parsed);
         const feedArticles: Article[] = [];
+        const isYouTube = isYouTubeFeed(feed.url);
 
         const now = Date.now();
         for (const item of parsed.items.slice(0, 10)) {
           const pubDate = new Date(item.pubDate || item.isoDate || 0);
           if (pubDate.getTime() > now || pubDate.getTime() === 0) continue;
 
+          const itemAny = item as any;
           const contentText =
-            item['content:encoded'] || item.content || item.contentSnippet || item.summary;
+            itemAny['content:encoded'] || item.content || item.contentSnippet || item.summary;
+
+          let thumbnail: string | undefined;
+          let videoId: string | undefined;
+          let mediaType: 'article' | 'video' = 'article';
+
+          if (isYouTube) {
+            const ytData = extractYouTubeData(itemAny);
+            thumbnail = ytData.thumbnail;
+            videoId = ytData.videoId;
+            mediaType = 'video';
+          }
 
           feedArticles.push({
             id: Buffer.from(item.link || item.guid || item.title || '')
@@ -124,8 +171,8 @@ export async function fetchAllFeeds(): Promise<Article[]> {
             title: item.title || 'Untitled',
             link: item.link || '',
             pubDate,
-            author: item.creator || item.author,
-            content: item['content:encoded'] || item.content,
+            author: item.creator || itemAny.author,
+            content: itemAny['content:encoded'] || item.content,
             summary: item.contentSnippet || item.summary,
             feedUrl: feed.url,
             feedTitle: feed.title,
@@ -133,6 +180,9 @@ export async function fetchAllFeeds(): Promise<Article[]> {
             category: feed.category,
             categorySlug: feed.categorySlug,
             readingTime: calculateReadingTime(contentText),
+            mediaType,
+            thumbnail,
+            videoId,
           });
         }
 
@@ -190,9 +240,9 @@ export async function getFeedMetadata(): Promise<FeedMeta[]> {
 
       if (parsed.items && parsed.items.length > 0) {
         const dates = parsed.items
-          .map((item) => new Date(item.pubDate || item.isoDate || 0))
-          .filter((date) => !isNaN(date.getTime()) && date.getTime() > 0)
-          .sort((a, b) => b.getTime() - a.getTime());
+          .map((item: any) => new Date(item.pubDate || item.isoDate || 0))
+          .filter((date: Date) => !isNaN(date.getTime()) && date.getTime() > 0)
+          .sort((a: Date, b: Date) => b.getTime() - a.getTime());
 
         lastArticleDate = dates[0] || null;
       }
