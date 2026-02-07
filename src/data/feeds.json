@@ -91,6 +91,21 @@
       ]
     },
     {
+      "name": "AI",
+      "slug": "ai",
+      "feeds": [
+        { "title": "Eugene Yan", "url": "https://eugeneyan.com/feed/" },
+        { "title": "Chip Huyen", "url": "https://huyenchip.com/blog/feed/" },
+        { "title": "Lilian Weng (Lil'Log)", "url": "https://lilianweng.github.io/feed.xml" },
+        { "title": "Shreya Shankar", "url": "https://www.sh-reya.com/blog/rss.xml" },
+        { "title": "Applied LLMs", "url": "https://applied-llms.org/feed.xml" },
+        { "title": "Simon Willison", "url": "https://simonwillison.net/tags/ai/feed/" },
+        { "title": "OpenAI Blog", "url": "https://openai.com/blog/rss/" },
+        { "title": "Google AI Blog", "url": "https://ai.googleblog.com/feeds/posts/default" },
+        { "title": "Hugging Face Blog", "url": "https://huggingface.co/blog/feed.xml" }
+      ]
+    },
+    {
       "name": "Linux & Raspberry Pi",
       "slug": "linux-pi",
       "feeds": [
