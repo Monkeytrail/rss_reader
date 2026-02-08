@@ -321,6 +321,24 @@ async function recordFeedHealthSnapshot(sources: FeedSource[]): Promise<void> {
   }
 }
 
+// Display order matching feeds.json; unlisted categories appear at the end
+const CATEGORY_ORDER: string[] = [
+  'music',
+  'smart-home',
+  'webdevelopment',
+  'pc-gaming',
+  'ux-ui',
+  'tech-longreads',
+  'tech-bloggers',
+  'ai',
+  'linux-pi',
+  'entertainment',
+  'culinair',
+  'board-games',
+  'sverige',
+  'youtube',
+];
+
 export async function getCategories() {
   const sources = await getAllFeedSources();
   const categories = new Map<string, { name: string; slug: string }>();
@@ -334,7 +352,11 @@ export async function getCategories() {
     }
   }
 
-  return Array.from(categories.values());
+  return Array.from(categories.values()).sort((a, b) => {
+    const ai = CATEGORY_ORDER.indexOf(a.slug);
+    const bi = CATEGORY_ORDER.indexOf(b.slug);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
 }
 
 const QUIET_THRESHOLD_DAYS = 28;
