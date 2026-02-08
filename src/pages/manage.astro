@@ -208,16 +208,20 @@ function formatLastSeen(date: Date | null): string {
     const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
     if (!title) {
+      let fallbackTitle = url;
+      try { fallbackTitle = new URL(url).hostname; } catch { /* keep raw url */ }
       try {
         const response = await fetch(
           `/.netlify/functions/fetch-feed-info?url=${encodeURIComponent(url)}`,
         );
         if (response.ok) {
           const data = await response.json();
-          title = data.title || new URL(url).hostname;
+          title = data.title || fallbackTitle;
+        } else {
+          title = fallbackTitle;
         }
       } catch {
-        title = new URL(url).hostname;
+        title = fallbackTitle;
       }
     }
 

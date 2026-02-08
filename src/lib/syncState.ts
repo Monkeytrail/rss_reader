@@ -15,11 +15,13 @@ function syncAction(action: SyncAction, articleId: string): void {
   const userId = getUserId();
   if (!userId) return;
 
-  fetch(`/.netlify/functions/sync-state?userId=${encodeURIComponent(userId)}`, {
+  fetch('/.netlify/functions/sync-state', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action, articleId }),
-  }).catch(() => {});
+    body: JSON.stringify({ userId, action, articleId }),
+  }).catch((err) => {
+    console.warn('[sync] Failed:', action, err.message || err);
+  });
 }
 
 export async function pullRemoteState(): Promise<{
@@ -30,9 +32,11 @@ export async function pullRemoteState(): Promise<{
   if (!userId) return null;
 
   try {
-    const response = await fetch(
-      `/.netlify/functions/sync-state?userId=${encodeURIComponent(userId)}`,
-    );
+    const response = await fetch('/.netlify/functions/sync-state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, action: 'pull' }),
+    });
     if (!response.ok) return null;
     return await response.json();
   } catch {

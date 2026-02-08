@@ -37,6 +37,13 @@ export default async (req: Request, _context: Context) => {
         continue;
       }
 
+      try {
+        new URL(feed.url);
+      } catch {
+        skipped++;
+        continue;
+      }
+
       const maxOrder = await db.execute({
         sql: 'SELECT COALESCE(MAX(sort_order), -1) + 1 as next_order FROM feeds WHERE category_slug = ?',
         args: [feed.categorySlug],

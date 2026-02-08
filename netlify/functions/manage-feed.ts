@@ -28,6 +28,15 @@ export default async (req: Request, _context: Context) => {
         );
       }
 
+      try {
+        new URL(url);
+      } catch {
+        return new Response(
+          JSON.stringify({ error: 'Invalid feed URL' }),
+          { status: 400, headers },
+        );
+      }
+
       const maxOrder = await db.execute({
         sql: 'SELECT COALESCE(MAX(sort_order), -1) + 1 as next_order FROM feeds WHERE category_slug = ?',
         args: [category_slug],

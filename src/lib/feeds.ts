@@ -25,8 +25,8 @@ async function isYouTubeShort(videoId: string): Promise<boolean> {
     const res = await fetch(`https://www.youtube.com/shorts/${videoId}`, {
       method: 'HEAD',
       redirect: 'manual',
+      signal: AbortSignal.timeout(5000),
     });
-    // 200 = it's a Short, 303 = redirect to /watch (regular video)
     return res.status === 200;
   } catch {
     return false;

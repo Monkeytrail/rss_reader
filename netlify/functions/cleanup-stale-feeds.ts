@@ -10,16 +10,17 @@ export default async (_req: Request, _context: Context) => {
     const db = getDb();
 
     // Find feeds with enough history to evaluate
-    const result = await db.execute(`
-      SELECT f.url, f.title,
+    const result = await db.execute({
+      sql: `SELECT f.url, f.title,
         COUNT(s.id) as snapshot_count,
         SUM(CASE WHEN s.status = 'error' THEN 1 ELSE 0 END) as error_count,
         MAX(s.last_article_date) as latest_article
       FROM feeds f
       LEFT JOIN feed_health_snapshots s ON f.url = s.feed_url
       GROUP BY f.url
-      HAVING COUNT(s.id) >= ${MIN_SNAPSHOTS}
-    `);
+      HAVING COUNT(s.id) >= ?`,
+      args: [MIN_SNAPSHOTS],
+    });
 
     const now = Date.now();
     const toDelete: { url: string; title: string; reason: string }[] = [];
