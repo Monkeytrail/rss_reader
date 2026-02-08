@@ -20,6 +20,41 @@ function isYouTubeFeed(feedUrl: string): boolean {
   return feedUrl.includes('youtube.com/feeds');
 }
 
+async function isYouTubeShort(videoId: string): Promise<boolean> {
+  try {
+    const res = await fetch(`https://www.youtube.com/shorts/${videoId}`, {
+      method: 'HEAD',
+      redirect: 'manual',
+    });
+    // 200 = it's a Short, 303 = redirect to /watch (regular video)
+    return res.status === 200;
+  } catch {
+    return false;
+  }
+}
+
+async function filterOutShorts(articles: Article[]): Promise<Article[]> {
+  const ytArticles = articles.filter((a) => a.videoId);
+  if (ytArticles.length === 0) return articles;
+
+  const results = await Promise.allSettled(
+    ytArticles.map(async (a) => ({ id: a.id, isShort: await isYouTubeShort(a.videoId!) })),
+  );
+
+  const shortIds = new Set<string>();
+  for (const r of results) {
+    if (r.status === 'fulfilled' && r.value.isShort) {
+      shortIds.add(r.value.id);
+    }
+  }
+
+  if (shortIds.size > 0) {
+    console.log(`Filtered out ${shortIds.size} YouTube Shorts`);
+  }
+
+  return articles.filter((a) => !shortIds.has(a.id));
+}
+
 function extractYouTubeData(item: any): { thumbnail?: string; videoId?: string } {
   let thumbnail: string | undefined;
   let videoId: string | undefined;
@@ -226,7 +261,8 @@ export async function fetchAllFeeds(): Promise<Article[]> {
     }
   }
 
-  cachedArticles = articles.sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
+  const filtered = await filterOutShorts(articles);
+  cachedArticles = filtered.sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
 
   // Record feed health snapshot to Turso (build-time only)
   if (typeof window === 'undefined') {
