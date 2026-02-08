@@ -94,7 +94,8 @@
         { "title": "Julia Evans", "url": "https://jvns.ca/atom.xml" },
         { "title": "Xe Iaso", "url": "https://xeiaso.net/blog.rss" },
         { "title": "Brandur Leach", "url": "https://brandur.org/articles.atom" },
-        { "title": "Patrick McKenzie", "url": "https://www.kalzumeus.com/feed/" }
+        { "title": "Patrick McKenzie", "url": "https://www.kalzumeus.com/feed/" },
+        { "title": "Brian Lovin", "url": "https://brianlovin.com/writing/rss" }
       ]
     },
     {
