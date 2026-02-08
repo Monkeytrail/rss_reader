@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import Parser from 'rss-parser';
 import { calculateReadingTime } from './utils';
 
@@ -187,9 +188,10 @@ export async function fetchAllFeeds(): Promise<Article[]> {
           }
 
           feedArticles.push({
-            id: Buffer.from(item.link || item.guid || item.title || '')
-              .toString('base64')
-              .slice(0, 20),
+            id: createHash('sha256')
+              .update(item.link || item.guid || item.title || '')
+              .digest('base64url')
+              .slice(0, 12),
             title: item.title || 'Untitled',
             link: item.link || '',
             pubDate,
