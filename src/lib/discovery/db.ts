@@ -78,5 +78,20 @@ export async function initSchema(): Promise<void> {
     `CREATE INDEX IF NOT EXISTS idx_user_read ON user_read_articles(user_id)`,
     `CREATE INDEX IF NOT EXISTS idx_user_bookmarks ON user_bookmarks(user_id)`,
     `CREATE INDEX IF NOT EXISTS idx_feed_health ON feed_health_snapshots(feed_url, build_time DESC)`,
+    `CREATE TABLE IF NOT EXISTS feeds (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      url TEXT UNIQUE NOT NULL,
+      category_name TEXT NOT NULL,
+      category_slug TEXT NOT NULL,
+      hidden INTEGER NOT NULL DEFAULT 0,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      source TEXT NOT NULL DEFAULT 'manual'
+        CHECK (source IN ('seed', 'manual', 'opml', 'discovered')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_feeds_category ON feeds(category_slug)`,
+    `CREATE INDEX IF NOT EXISTS idx_feeds_hidden ON feeds(hidden)`,
+    `CREATE INDEX IF NOT EXISTS idx_feeds_url ON feeds(url)`,
   ]);
 }

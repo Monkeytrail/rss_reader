@@ -1,6 +1,4 @@
 import Parser from 'rss-parser';
-import feedsConfig from '../data/feeds.json';
-import { parseOPMLFiles } from './opml';
 import { calculateReadingTime } from './utils';
 
 const parser = new Parser({
@@ -89,10 +87,36 @@ function getFaviconUrl(feedUrl: string): string {
 }
 
 export async function getAllFeedSources(): Promise<FeedSource[]> {
+  try {
+    const { getDb, initSchema } = await import('./discovery/db');
+    await initSchema();
+    const db = getDb();
+
+    const result = await db.execute(
+      `SELECT title, url, category_name, category_slug
+       FROM feeds
+       WHERE hidden = 0
+       ORDER BY category_slug, sort_order`,
+    );
+
+    return result.rows.map((row) => ({
+      title: row.title as string,
+      url: row.url as string,
+      category: row.category_name as string,
+      categorySlug: row.category_slug as string,
+      faviconUrl: getFaviconUrl(row.url as string),
+    }));
+  } catch (error) {
+    console.error('Failed to fetch feeds from Turso, falling back to feeds.json:', error);
+    return getAllFeedSourcesFallback();
+  }
+}
+
+async function getAllFeedSourcesFallback(): Promise<FeedSource[]> {
+  const feedsConfig = await import('../data/feeds.json');
   const sources: FeedSource[] = [];
   const seenUrls = new Set<string>();
 
-  // 1. Feeds from feeds.json
   for (const category of feedsConfig.categories) {
     for (const feed of category.feeds) {
       if (!seenUrls.has(feed.url)) {
@@ -105,18 +129,6 @@ export async function getAllFeedSources(): Promise<FeedSource[]> {
           faviconUrl: getFaviconUrl(feed.url),
         });
       }
-    }
-  }
-
-  // 2. Feeds from OPML files
-  const opmlFeeds = await parseOPMLFiles();
-  for (const feed of opmlFeeds) {
-    if (!seenUrls.has(feed.url)) {
-      seenUrls.add(feed.url);
-      sources.push({
-        ...feed,
-        faviconUrl: getFaviconUrl(feed.url),
-      });
     }
   }
 
@@ -332,6 +344,26 @@ export async function getFeedMetadata(): Promise<FeedMeta[]> {
   }
 
   return metadata;
+}
+
+export async function getHiddenFeeds(): Promise<{ title: string; url: string; category: string }[]> {
+  try {
+    const { getDb, initSchema } = await import('./discovery/db');
+    await initSchema();
+    const db = getDb();
+
+    const result = await db.execute(
+      'SELECT title, url, category_name FROM feeds WHERE hidden = 1 ORDER BY category_name, title',
+    );
+
+    return result.rows.map((row) => ({
+      title: row.title as string,
+      url: row.url as string,
+      category: row.category_name as string,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export async function getFeedErrors(): Promise<FeedError[]> {

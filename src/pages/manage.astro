@@ -1,15 +1,16 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
-import { getFeedMetadata, getFeedErrors } from '../lib/feeds';
-import feedsConfig from '../data/feeds.json';
+import { getFeedMetadata, getFeedErrors, getCategories, getHiddenFeeds } from '../lib/feeds';
 
 const feeds = await getFeedMetadata();
 const feedErrors = await getFeedErrors();
+const categories = await getCategories();
+const hiddenFeeds = await getHiddenFeeds();
 
-// Group feed metadata by category (preserving feeds.json order)
+// Group feed metadata by category
 const feedsByCategory = new Map<string, typeof feeds>();
-for (const cat of feedsConfig.categories) {
+for (const cat of categories) {
   const catFeeds = feeds.filter((f) => f.categorySlug === cat.slug);
   if (catFeeds.length > 0) {
     feedsByCategory.set(cat.name, catFeeds);
@@ -55,11 +56,23 @@ function formatLastSeen(date: Date | null): string {
       </section>
     )}
 
-    <div id="hidden-feeds-section" class="hidden-feeds-section" hidden>
-      <h2>Hidden feeds (<span id="hidden-count">0</span>)</h2>
-      <p class="section-description">These feeds are hidden from your article list.</p>
-      <ul id="hidden-feeds-list" class="feed-list"></ul>
-    </div>
+    {hiddenFeeds.length > 0 && (
+      <section class="hidden-feeds-section">
+        <h2>Hidden feeds ({hiddenFeeds.length})</h2>
+        <p class="section-description">These feeds are hidden from your article list.</p>
+        <ul class="feed-list">
+          {hiddenFeeds.map((feed) => (
+            <li class="feed-item" data-feed-url={feed.url}>
+              <div class="feed-info">
+                <span class="feed-title">{feed.title}</span>
+                <span class="feed-meta">{feed.category}</span>
+              </div>
+              <button class="restore-feed btn-secondary" data-url={feed.url}>Restore</button>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
 
     {[...feedsByCategory.entries()].map(([categoryName, catFeeds]) => (
       <section class="feed-category-section">
@@ -76,17 +89,12 @@ function formatLastSeen(date: Date | null): string {
                   {feed.isQuiet && ' \u00b7 Quiet'}
                 </span>
               </div>
-              <button class="remove-feed" data-url={feed.url} aria-label={`Remove ${feed.title}`}>&times;</button>
+              <button class="remove-feed" data-url={feed.url} aria-label={`Hide ${feed.title}`}>&times;</button>
             </li>
           ))}
         </ul>
       </section>
     ))}
-
-    <section id="custom-feeds-section" class="feed-category-section">
-      <h2>Custom <span id="custom-count" class="feed-count">(0)</span></h2>
-      <ul id="custom-feeds-list" class="feed-list"></ul>
-    </section>
 
     <section class="add-feed-section">
       <h2>Add Feed</h2>
@@ -124,7 +132,7 @@ function formatLastSeen(date: Date | null): string {
             <button type="submit" class="btn-primary">Add</button>
           </div>
         </div>
-        <p class="form-note">Custom feeds are saved locally in your browser.</p>
+        <p class="form-note">Feed will appear after the next site build.</p>
       </form>
     </section>
 
@@ -148,114 +156,45 @@ function formatLastSeen(date: Date | null): string {
 </Layout>
 
 <script>
-  import {
-    getCustomFeeds,
-    removeCustomFeed,
-    addCustomFeed,
-    getHiddenFeeds,
-    hideFeed,
-    unhideFeed,
-    exportCustomFeedsAsOPML,
-  } from '../lib/customFeeds';
-
-  // --- Hidden feeds ---
-  function renderHiddenFeeds() {
-    const hidden = getHiddenFeeds();
-    const section = document.getElementById('hidden-feeds-section')!;
-    const list = document.getElementById('hidden-feeds-list')!;
-    const count = document.getElementById('hidden-count')!;
-
-    if (hidden.length === 0) {
-      section.hidden = true;
-      return;
-    }
-
-    section.hidden = false;
-    count.textContent = String(hidden.length);
-
-    list.innerHTML = hidden
-      .map(
-        (url) => `
-        <li class="feed-item">
-          <div class="feed-info">
-            <span class="feed-meta"><code>${url}</code></span>
-          </div>
-          <button class="restore-feed btn-secondary" data-url="${url}">Restore</button>
-        </li>
-      `,
-      )
-      .join('');
-
-    list.querySelectorAll('.restore-feed').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        unhideFeed((btn as HTMLElement).dataset.url!);
-        // Show the feed item again in the main list
-        const feedItem = document.querySelector(`.feed-item[data-feed-url="${(btn as HTMLElement).dataset.url}"]`);
-        if (feedItem) (feedItem as HTMLElement).hidden = false;
-        renderHiddenFeeds();
-      });
-    });
-  }
-
-  // Mark already-hidden feeds in the server-rendered list
-  const hiddenUrls = new Set(getHiddenFeeds());
-  document.querySelectorAll<HTMLElement>('.feed-item[data-feed-url]').forEach((item) => {
-    if (hiddenUrls.has(item.dataset.feedUrl!)) {
-      item.hidden = true;
-    }
-  });
-
-  // Attach remove handlers to default feed items
+  // --- Hide feed (move to hidden) ---
   document.querySelectorAll<HTMLElement>('.remove-feed[data-url]').forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const url = btn.dataset.url!;
-      hideFeed(url);
       const feedItem = btn.closest<HTMLElement>('.feed-item');
-      if (feedItem) feedItem.hidden = true;
-      renderHiddenFeeds();
+      if (feedItem) feedItem.style.opacity = '0.3';
+
+      try {
+        await fetch('/.netlify/functions/manage-feed', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, hidden: true }),
+        });
+        if (feedItem) feedItem.remove();
+      } catch {
+        if (feedItem) feedItem.style.opacity = '';
+      }
     });
   });
 
-  renderHiddenFeeds();
+  // --- Restore hidden feed ---
+  document.querySelectorAll<HTMLElement>('.restore-feed[data-url]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const url = btn.dataset.url!;
+      const feedItem = btn.closest<HTMLElement>('.feed-item');
+      if (feedItem) feedItem.style.opacity = '0.3';
 
-  // --- Custom feeds ---
-  function renderCustomFeeds() {
-    const customFeeds = getCustomFeeds();
-    const list = document.getElementById('custom-feeds-list')!;
-    const count = document.getElementById('custom-count')!;
-    const section = document.getElementById('custom-feeds-section')!;
-
-    count.textContent = `(${customFeeds.length})`;
-
-    if (customFeeds.length === 0) {
-      list.innerHTML = '<li class="feed-item"><p class="empty">No custom feeds added yet.</p></li>';
-      return;
-    }
-
-    list.innerHTML = customFeeds
-      .map(
-        (feed) => `
-        <li class="feed-item">
-          <img src="https://www.google.com/s2/favicons?domain=${new URL(feed.url).hostname}&sz=32" alt="" class="feed-icon" width="16" height="16" loading="lazy" />
-          <div class="feed-info">
-            <span class="feed-title">${feed.title}</span>
-            <span class="feed-meta">${feed.category} &middot; <code>${feed.url}</code></span>
-          </div>
-          <button class="remove-feed" data-custom-id="${feed.id}" aria-label="Remove ${feed.title}">&times;</button>
-        </li>
-      `,
-      )
-      .join('');
-
-    list.querySelectorAll('.remove-feed[data-custom-id]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        removeCustomFeed((btn as HTMLElement).dataset.customId!);
-        renderCustomFeeds();
-      });
+      try {
+        await fetch('/.netlify/functions/manage-feed', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, hidden: false }),
+        });
+        if (feedItem) feedItem.remove();
+      } catch {
+        if (feedItem) feedItem.style.opacity = '';
+      }
     });
-  }
-
-  renderCustomFeeds();
+  });
 
   // --- Add feed form ---
   const form = document.getElementById('add-feed-form') as HTMLFormElement;
@@ -266,6 +205,7 @@ function formatLastSeen(date: Date | null): string {
     const url = formData.get('url') as string;
     let title = formData.get('title') as string;
     const category = (formData.get('category') as string) || 'Custom';
+    const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
     if (!title) {
       try {
@@ -281,23 +221,83 @@ function formatLastSeen(date: Date | null): string {
       }
     }
 
-    addCustomFeed(url, title, category);
-    form.reset();
-    (document.getElementById('feed-category') as HTMLInputElement).value = 'Custom';
-    renderCustomFeeds();
+    const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Adding...';
+
+    try {
+      const response = await fetch('/.netlify/functions/manage-feed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          url,
+          category_name: category,
+          category_slug: categorySlug,
+        }),
+      });
+
+      if (response.ok) {
+        submitBtn.textContent = 'Added! Rebuilding...';
+        form.reset();
+        (document.getElementById('feed-category') as HTMLInputElement).value = 'Custom';
+      } else {
+        const data = await response.json();
+        submitBtn.textContent = data.error || 'Failed';
+      }
+    } catch {
+      submitBtn.textContent = 'Error';
+    }
+
+    setTimeout(() => {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Add';
+    }, 3000);
   });
 
-  // --- Export OPML ---
+  // --- Export OPML (all feeds from page) ---
   document.getElementById('export-opml')?.addEventListener('click', () => {
-    const opml = exportCustomFeedsAsOPML();
+    const feedItems = document.querySelectorAll<HTMLElement>('.feed-item[data-feed-url]');
+    const feedsByCategory = new Map<string, { title: string; url: string }[]>();
+
+    feedItems.forEach((item) => {
+      const url = item.dataset.feedUrl!;
+      const title = item.querySelector('.feed-title')?.textContent || url;
+      const section = item.closest('.feed-category-section');
+      const category = section?.querySelector('h2')?.textContent?.replace(/\(\d+\)/, '').trim() || 'Uncategorized';
+
+      if (!feedsByCategory.has(category)) feedsByCategory.set(category, []);
+      feedsByCategory.get(category)!.push({ title, url });
+    });
+
+    const outlines = [...feedsByCategory.entries()]
+      .map(([cat, feeds]) => {
+        const children = feeds
+          .map((f) => `      <outline type="rss" text="${escapeXml(f.title)}" title="${escapeXml(f.title)}" xmlUrl="${escapeXml(f.url)}" />`)
+          .join('\n');
+        return `    <outline text="${escapeXml(cat)}" title="${escapeXml(cat)}">\n${children}\n    </outline>`;
+      })
+      .join('\n');
+
+    const opml = `<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head><title>RSS Reader Feeds</title></head>
+  <body>
+${outlines}
+  </body>
+</opml>`;
+
     const blob = new Blob([opml], { type: 'application/xml' });
-    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = 'custom-feeds.opml';
+    a.href = URL.createObjectURL(blob);
+    a.download = 'feeds.opml';
     a.click();
-    URL.revokeObjectURL(url);
+    URL.revokeObjectURL(a.href);
   });
+
+  function escapeXml(text: string): string {
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
 
   // --- Import OPML ---
   document.getElementById('opml-upload')?.addEventListener('change', async (e) => {
@@ -307,20 +307,20 @@ function formatLastSeen(date: Date | null): string {
     const text = await file.text();
     const preview = document.getElementById('import-preview')!;
 
-    // Parse feeds from OPML
     const parser = new DOMParser();
     const doc = parser.parseFromString(text, 'application/xml');
     const outlines = doc.querySelectorAll('outline[xmlUrl]');
 
-    const feeds: { title: string; url: string; category: string }[] = [];
+    const feeds: { title: string; url: string; category: string; categorySlug: string }[] = [];
     outlines.forEach((outline) => {
       const url = outline.getAttribute('xmlUrl')!;
       const title = outline.getAttribute('title') || outline.getAttribute('text') || new URL(url).hostname;
       const parent = outline.parentElement;
       const category = parent?.tagName === 'outline'
-        ? (parent.getAttribute('title') || parent.getAttribute('text') || 'Custom')
-        : 'Custom';
-      feeds.push({ title, url, category });
+        ? (parent.getAttribute('title') || parent.getAttribute('text') || 'Imported')
+        : 'Imported';
+      const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      feeds.push({ title, url, category, categorySlug });
     });
 
     if (feeds.length === 0) {
@@ -328,28 +328,33 @@ function formatLastSeen(date: Date | null): string {
       return;
     }
 
-    // Show preview with import button
-    const existingUrls = new Set(getCustomFeeds().map((f) => f.url));
-    const newFeeds = feeds.filter((f) => !existingUrls.has(f.url));
-
     preview.innerHTML = `
-      <p>Found ${feeds.length} feed${feeds.length === 1 ? '' : 's'}${newFeeds.length < feeds.length ? ` (${feeds.length - newFeeds.length} already added)` : ''}.</p>
-      ${newFeeds.length > 0 ? `<button id="confirm-import" class="btn-primary">Import ${newFeeds.length} feed${newFeeds.length === 1 ? '' : 's'}</button>` : '<p class="section-description">All feeds already imported.</p>'}
+      <p>Found ${feeds.length} feed${feeds.length === 1 ? '' : 's'}.</p>
+      <button id="confirm-import" class="btn-primary">Import ${feeds.length} feed${feeds.length === 1 ? '' : 's'}</button>
     `;
 
-    document.getElementById('confirm-import')?.addEventListener('click', () => {
-      for (const feed of newFeeds) {
-        addCustomFeed(feed.url, feed.title, feed.category);
+    document.getElementById('confirm-import')?.addEventListener('click', async () => {
+      const btn = document.getElementById('confirm-import') as HTMLButtonElement;
+      btn.disabled = true;
+      btn.textContent = 'Importing...';
+
+      try {
+        const response = await fetch('/.netlify/functions/import-opml', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(feeds),
+        });
+        const data = await response.json();
+        preview.innerHTML = `<p>Imported ${data.imported} feed${data.imported === 1 ? '' : 's'} (${data.skipped} skipped). Rebuilding...</p>`;
+      } catch {
+        preview.innerHTML = '<p>Import failed.</p>';
       }
-      preview.innerHTML = `<p>Imported ${newFeeds.length} feed${newFeeds.length === 1 ? '' : 's'}.</p>`;
-      renderCustomFeeds();
     });
 
-    // Reset file input so the same file can be re-selected
     (e.target as HTMLInputElement).value = '';
   });
 
-  // Feed Health Dashboard
+  // --- Feed Health Dashboard ---
   async function loadFeedHealth() {
     try {
       const response = await fetch('/.netlify/functions/get-feed-health');
@@ -367,7 +372,6 @@ function formatLastSeen(date: Date | null): string {
         return;
       }
 
-      // Only show feeds with issues
       const issues: string[] = [];
       for (const [feedUrl, snapshots] of Object.entries(healthData)) {
         const recent = snapshots.slice(0, 5);

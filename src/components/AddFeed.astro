@@ -40,13 +40,11 @@
       <button type="button" class="btn-secondary add-feed-cancel">Cancel</button>
     </div>
 
-    <p class="form-note">Custom feeds are saved locally in your browser.</p>
+    <p class="form-note">Feed will appear after the next site build.</p>
   </form>
 </div>
 
 <script>
-  import { addCustomFeed } from '../lib/customFeeds';
-
   const toggle = document.querySelector('.add-feed-toggle');
   const form = document.getElementById('add-feed-form') as HTMLFormElement;
   const cancel = document.querySelector('.add-feed-cancel');
@@ -108,7 +106,41 @@
       }
     }
 
-    addCustomFeed(url, title, category);
-    window.location.reload();
+    const categorySlug = category
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+    const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Adding...';
+
+    try {
+      const response = await fetch('/.netlify/functions/manage-feed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          url,
+          category_name: category,
+          category_slug: categorySlug,
+        }),
+      });
+
+      if (response.ok) {
+        submitBtn.textContent = 'Added! Rebuilding...';
+        form.reset();
+      } else {
+        const data = await response.json();
+        submitBtn.textContent = data.error || 'Failed';
+      }
+    } catch {
+      submitBtn.textContent = 'Error';
+    }
+
+    setTimeout(() => {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Add Feed';
+    }, 3000);
   });
 </script>
