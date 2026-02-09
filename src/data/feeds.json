@@ -51,7 +51,9 @@
         { "title": "Keith Burgun", "url": "https://keithburgun.net/feed/" },
         { "title": "DualShockers", "url": "https://www.dualshockers.com/feed/" },
         { "title": "Eurogamer", "url": "https://www.eurogamer.net/feed" },
-        { "title": "Gamespot", "url": "https://www.gamespot.com/feeds/mashup" }
+        { "title": "Gamespot", "url": "https://www.gamespot.com/feeds/mashup" },
+        { "title": "Polygon", "url": "https://www.polygon.com/feed/" },
+        { "title": "PC Gamer", "url": "https://www.pcgamer.com/rss/" }
       ]
     },
     {
