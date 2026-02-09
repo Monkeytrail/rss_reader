@@ -93,5 +93,24 @@ export async function initSchema(): Promise<void> {
     `CREATE INDEX IF NOT EXISTS idx_feeds_category ON feeds(category_slug)`,
     `CREATE INDEX IF NOT EXISTS idx_feeds_hidden ON feeds(hidden)`,
     `CREATE INDEX IF NOT EXISTS idx_feeds_url ON feeds(url)`,
+    `CREATE TABLE IF NOT EXISTS feed_refresh_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      run_at TEXT NOT NULL DEFAULT (datetime('now')),
+      total_feeds INTEGER NOT NULL DEFAULT 0,
+      updated INTEGER NOT NULL DEFAULT 0,
+      not_modified INTEGER NOT NULL DEFAULT 0,
+      errors INTEGER NOT NULL DEFAULT 0,
+      duration_ms INTEGER NOT NULL DEFAULT 0
+    )`,
   ]);
+
+  // Add conditional-fetching columns (idempotent: ignores "duplicate column" errors)
+  const newColumns = ['etag', 'last_modified', 'last_fetched_at', 'last_fetch_status'];
+  for (const col of newColumns) {
+    try {
+      await db.execute(`ALTER TABLE feeds ADD COLUMN ${col} TEXT`);
+    } catch {
+      // Column already exists — safe to ignore
+    }
+  }
 }
