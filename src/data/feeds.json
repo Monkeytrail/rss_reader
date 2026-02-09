@@ -53,7 +53,8 @@
         { "title": "Eurogamer", "url": "https://www.eurogamer.net/feed" },
         { "title": "Gamespot", "url": "https://www.gamespot.com/feeds/mashup" },
         { "title": "Polygon", "url": "https://www.polygon.com/feed/" },
-        { "title": "PC Gamer", "url": "https://www.pcgamer.com/rss/" }
+        { "title": "PC Gamer", "url": "https://www.pcgamer.com/rss/" },
+        { "title": "Kotaku", "url": "https://kotaku.com/rss" }
       ]
     },
     {
