@@ -11,30 +11,33 @@ import RefreshButton from './RefreshButton.astro';
 
   <nav class="header-nav">
     <RefreshButton />
-    <a href="/discover">Discover</a>
-    <a href="/#saved" class="saved-link">Saved <span id="bookmark-count" class="badge"></span></a>
-    <a href="/manage">Feeds</a>
-    <ThemeToggle />
-    <button class="logout-btn" id="logout-btn" aria-label="Log out">Logout</button>
+    <div class="header-menu">
+      <button class="header-menu-btn" aria-label="Menu" aria-expanded="false">&#xFE19;</button>
+      <div class="header-dropdown" hidden>
+        <a href="/discover">Discover</a>
+        <a href="/#saved">Saved</a>
+        <a href="/manage">Feeds</a>
+        <ThemeToggle />
+        <button class="logout-btn" id="logout-btn" aria-label="Log out">Logout</button>
+      </div>
+    </div>
   </nav>
 </header>
 
 <script>
-  import { getBookmarkCount } from '../lib/bookmarks';
+  const menuBtn = document.querySelector('.header-menu-btn');
+  const dropdown = document.querySelector('.header-dropdown') as HTMLElement;
 
-  function updateBookmarkBadge() {
-    const badge = document.getElementById('bookmark-count');
-    if (badge) {
-      const count = getBookmarkCount();
-      badge.textContent = count > 0 ? String(count) : '';
-    }
-  }
-
-  updateBookmarkBadge();
+  menuBtn?.addEventListener('click', () => {
+    const open = !dropdown.hidden;
+    dropdown.hidden = open;
+    menuBtn.setAttribute('aria-expanded', String(!open));
+  });
 
   document.addEventListener('click', (e) => {
-    if ((e.target as Element).closest('.bookmark-button')) {
-      setTimeout(updateBookmarkBadge, 0);
+    if (!(e.target as Element).closest('.header-menu')) {
+      dropdown.hidden = true;
+      menuBtn?.setAttribute('aria-expanded', 'false');
     }
   });
 
