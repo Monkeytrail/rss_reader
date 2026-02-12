@@ -98,6 +98,13 @@ import Header from '../components/Header.astro';
     font-size: var(--font-size-sm);
     color: var(--color-text-secondary);
     margin-bottom: var(--space-xs);
+    text-decoration: none;
+    display: block;
+  }
+
+  .suggestion-domain:hover {
+    color: var(--color-accent);
+    text-decoration: underline;
   }
 
   .suggestion-description {
@@ -233,7 +240,7 @@ import Header from '../components/Header.astro';
           />
           <div class="suggestion-info">
             <div class="suggestion-title">${escapeHtml(s.feed_title || s.domain)}</div>
-            <div class="suggestion-domain">${escapeHtml(s.domain)}</div>
+            <a class="suggestion-domain" href="https://${escapeAttr(s.domain)}" target="_blank" rel="noopener noreferrer">${escapeHtml(s.domain)}</a>
             ${s.feed_description ? `<p class="suggestion-description">${escapeHtml(s.feed_description)}</p>` : ''}
             <div class="suggestion-meta">
               <span class="suggestion-score">${s.current_score} pts</span>
