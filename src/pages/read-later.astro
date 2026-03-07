@@ -246,7 +246,7 @@ import Header from '../components/Header.astro';
       } else if (res.status === 200) {
         showFeedback('Already in your queue!', 'duplicate');
       } else {
-        showFeedback(data.error || 'Failed to save', 'error');
+        showFeedback(data.error || data.message || `Error ${res.status}`, 'error');
       }
     } catch {
       showFeedback('Network error', 'error');
