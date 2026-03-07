@@ -28,12 +28,14 @@ import Header from '../components/Header.astro';
         <h4>iOS Shortcut</h4>
         <ol class="rl-instructions">
           <li>Open the Shortcuts app and tap <strong>+</strong></li>
+          <li>Set shortcut to receive <strong>URLs</strong> from Share Sheet</li>
+          <li>Add action: <strong>Text</strong> — insert <strong>Shortcut Input</strong> as the text content (this converts the URL to a plain string)</li>
           <li>Add action: <strong>Get Contents of URL</strong></li>
           <li>Set URL to: <code id="api-url-display">https://rss-pardoena.netlify.app/.netlify/functions/read-later</code> <button id="copy-api-url" class="copy-url-btn" aria-label="Copy URL" title="Copy URL">&#x1F4CB;</button></li>
           <li>Method: <strong>POST</strong></li>
           <li>Add header — Key: <code>Content-Type</code> · Text: <code>application/json</code></li>
           <li>Add header — Key: <code>Authorization</code> · Text: <code>Bearer YOUR_TOKEN</code></li>
-          <li>Request Body: choose <strong>JSON</strong>, add field — Key: <code>url</code> · Value: <strong>Shortcut Input</strong></li>
+          <li>Request Body: choose <strong>JSON</strong>, add field — Key: <code>url</code> · Value: the <strong>Text</strong> variable from step 3</li>
           <li>Enable <strong>Show in Share Sheet</strong> for URLs</li>
         </ol>
       </div>
@@ -185,8 +187,7 @@ import Header from '../components/Header.astro';
         s.textContent='Failed to save';document.body.appendChild(s);setTimeout(()=>s.remove(),2000);
       });
     })();`;
-    bookmarkletLink.href = 'javascript:void' + encodeURIComponent(`(${code.replace(/\s+/g,' ')})`) + '';
-    bookmarkletLink.href = `javascript:void(${encodeURIComponent(code.replace(/\s+/g, ' '))})`;
+    bookmarkletLink.href = `javascript:${code.replace(/\s+/g, ' ')}`;
   }
 
   function initToken() {
