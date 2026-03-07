@@ -38,7 +38,7 @@ import Header from '../../components/Header.astro';
 
 <script>
   const SITE_URL = 'https://rss-pardoena.netlify.app';
-  const API = `${SITE_URL}/api/read-later`;
+  const API = `${SITE_URL}/.netlify/functions/read-later`;
   const TOKEN_KEY = 'rl-token';
   const LIMIT = 30;
 
@@ -124,7 +124,7 @@ import Header from '../../components/Header.astro';
   }
 
   async function apiItem(method: string, id: number) {
-    return fetch(`${SITE_URL}/api/read-later/${id}`, {
+    return fetch(`${SITE_URL}/.netlify/functions/read-later-item`, {
       method,
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
       body: JSON.stringify({ id }),

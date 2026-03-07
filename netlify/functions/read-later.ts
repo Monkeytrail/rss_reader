@@ -91,6 +91,4 @@ export default async (req: Request, _context: Context) => {
   return corsJson({ error: 'Method not allowed' }, 405);
 };
 
-export const config: Config = {
-  path: '/api/read-later',
-};
+export const config: Config = {};

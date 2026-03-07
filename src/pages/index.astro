@@ -70,7 +70,7 @@ for (const article of articles) {
 
       try {
         const res = await fetch(
-          `https://rss-pardoena.netlify.app/api/read-later?token=${encodeURIComponent(token)}`
+          `https://rss-pardoena.netlify.app/.netlify/functions/read-later?token=${encodeURIComponent(token)}`
         );
         if (!res.ok) return;
         const data = await res.json();

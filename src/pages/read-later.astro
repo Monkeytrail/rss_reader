@@ -29,7 +29,7 @@ import Header from '../components/Header.astro';
         <ol class="rl-instructions">
           <li>Open the Shortcuts app and tap <strong>+</strong></li>
           <li>Add action: <strong>Get Contents of URL</strong></li>
-          <li>Set URL to: <code id="api-url-display">https://rss-pardoena.netlify.app/api/read-later</code></li>
+          <li>Set URL to: <code id="api-url-display">https://rss-pardoena.netlify.app/.netlify/functions/read-later</code></li>
           <li>Method: <strong>POST</strong></li>
           <li>Headers: <code>Content-Type: application/json</code>, <code>Authorization: Bearer YOUR_TOKEN</code></li>
           <li>Body: <code>&#123;"url":"&#123;Shortcut Input&#125;"&#125;</code></li>
@@ -146,7 +146,7 @@ import Header from '../components/Header.astro';
 
 <script>
   const SITE_URL = 'https://rss-pardoena.netlify.app';
-  const API = `${SITE_URL}/api/read-later`;
+  const API = `${SITE_URL}/.netlify/functions/read-later`;
   const TOKEN_KEY = 'rl-token';
 
   // ── Token management ────────────────────────────────────────────────────────
@@ -345,7 +345,7 @@ import Header from '../components/Header.astro';
 
   async function apiItem(method: string, id: number) {
     const token = getToken();
-    return fetch(`${SITE_URL}/api/read-later/${id}`, {
+    return fetch(`${SITE_URL}/.netlify/functions/read-later-item`, {
       method,
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify({ id }),
