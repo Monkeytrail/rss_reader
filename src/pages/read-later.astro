@@ -31,8 +31,9 @@ import Header from '../components/Header.astro';
           <li>Add action: <strong>Get Contents of URL</strong></li>
           <li>Set URL to: <code id="api-url-display">https://rss-pardoena.netlify.app/.netlify/functions/read-later</code> <button id="copy-api-url" class="copy-url-btn" aria-label="Copy URL" title="Copy URL">&#x1F4CB;</button></li>
           <li>Method: <strong>POST</strong></li>
-          <li>Headers: <code>Content-Type: application/json</code>, <code>Authorization: Bearer YOUR_TOKEN</code></li>
-          <li>Body: <code>&#123;"url":"&#123;Shortcut Input&#125;"&#125;</code></li>
+          <li>Add header — Key: <code>Content-Type</code> · Text: <code>application/json</code></li>
+          <li>Add header — Key: <code>Authorization</code> · Text: <code>Bearer YOUR_TOKEN</code></li>
+          <li>Request Body: choose <strong>JSON</strong>, add field — Key: <code>url</code> · Value: <strong>Shortcut Input</strong></li>
           <li>Enable <strong>Show in Share Sheet</strong> for URLs</li>
         </ol>
       </div>
