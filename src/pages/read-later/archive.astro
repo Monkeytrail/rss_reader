@@ -1,0 +1,154 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+---
+
+<Layout title="Archive - Read Later - RSS Reader">
+  <Header />
+  <main class="container rl-page">
+
+    <div class="rl-header">
+      <h1>Archive</h1>
+      <a href="/read-later" class="rl-back">← Back to queue</a>
+    </div>
+
+    <p id="rl-loading" class="rl-state">Loading…</p>
+    <p id="rl-empty" class="rl-state" hidden>No archived items yet. Mark something as read and it'll show up here.</p>
+    <p id="rl-error" class="rl-state rl-state-error" hidden>Could not load archive. Check your token in <a href="/read-later">Setup</a>.</p>
+
+    <ul id="rl-list" class="rl-list" hidden></ul>
+
+    <div id="rl-more-container" hidden>
+      <button id="rl-more-btn" class="btn-secondary rl-more-btn">Load more</button>
+    </div>
+
+  </main>
+</Layout>
+
+<style>
+  .rl-page { max-width: 720px; margin-inline: auto; padding-block: var(--space-lg); }
+  .rl-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--space-md); }
+  .rl-back { font-size: var(--font-size-sm); color: var(--color-text-secondary); text-decoration: none; }
+  .rl-back:hover { color: var(--color-accent); }
+  .rl-state { text-align: center; padding: var(--space-xl); color: var(--color-text-secondary); }
+  .rl-state-error { color: #e53e3e; }
+  .rl-list { list-style: none; padding: 0; margin: 0; }
+  .rl-more-btn { display: block; width: 100%; margin-top: var(--space-md); }
+</style>
+
+<script>
+  const SITE_URL = 'https://rss-pardoena.netlify.app';
+  const API = `${SITE_URL}/api/read-later`;
+  const TOKEN_KEY = 'rl-token';
+  const LIMIT = 30;
+
+  function getToken(): string { return localStorage.getItem(TOKEN_KEY) || ''; }
+
+  const loadingEl = document.getElementById('rl-loading')!;
+  const emptyEl = document.getElementById('rl-empty')!;
+  const errorEl = document.getElementById('rl-error')!;
+  const listEl = document.getElementById('rl-list')!;
+  const moreContainer = document.getElementById('rl-more-container')!;
+  const moreBtn = document.getElementById('rl-more-btn')!;
+
+  let lastReadAt = '';
+
+  async function loadArchive(append = false) {
+    const token = getToken();
+    if (!token) { loadingEl.hidden = true; errorEl.hidden = false; return; }
+
+    if (!append) {
+      loadingEl.hidden = false;
+      listEl.hidden = true;
+      emptyEl.hidden = true;
+      errorEl.hidden = true;
+    }
+
+    try {
+      let url = `${API}?archived=true&token=${encodeURIComponent(token)}`;
+      if (append && lastReadAt) url += `&before=${encodeURIComponent(lastReadAt)}`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`${res.status}`);
+      const data = await res.json();
+
+      loadingEl.hidden = true;
+
+      if (!append && data.items.length === 0) { emptyEl.hidden = false; return; }
+
+      listEl.hidden = false;
+      if (!append) listEl.innerHTML = '';
+
+      data.items.forEach((item: any) => {
+        lastReadAt = item.read_at;
+        listEl.appendChild(buildCard(item));
+      });
+
+      moreContainer.hidden = !data.has_more;
+    } catch {
+      loadingEl.hidden = true;
+      if (!append) errorEl.hidden = false;
+    }
+  }
+
+  moreBtn.addEventListener('click', () => loadArchive(true));
+
+  function buildCard(item: any): HTMLLIElement {
+    const li = document.createElement('li');
+    li.className = 'rl-item';
+    li.dataset.id = item.id;
+
+    const isYt = item.source_type === 'youtube';
+    const domain = (() => { try { return new URL(item.url).hostname; } catch { return item.url; } })();
+    const readDate = new Date(item.read_at).toLocaleDateString('nl-BE', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    li.innerHTML = `
+      ${item.image_url ? `
+        <div class="rl-thumb-wrap">
+          <img class="rl-thumb" src="${escHtml(item.image_url)}" alt="" loading="lazy" />
+          ${isYt ? '<span class="rl-yt-badge">▶ YouTube</span>' : ''}
+        </div>` : ''}
+      <div class="rl-info">
+        <div class="rl-title"><a href="${escHtml(item.url)}" target="_blank" rel="noopener noreferrer">${escHtml(item.title || item.url)}</a></div>
+        ${item.description ? `<p class="rl-desc">${escHtml(item.description)}</p>` : ''}
+        <div class="rl-meta">${escHtml(item.yt_channel ? item.yt_channel + ' · ' : '')}${escHtml(domain)} · Read on ${readDate}</div>
+      </div>
+      <div class="rl-actions">
+        <button class="rl-btn rl-btn-restore" aria-label="Restore to queue">↩ Restore</button>
+        <button class="rl-btn rl-btn-delete" aria-label="Delete permanently">✕</button>
+      </div>`;
+
+    li.querySelector('.rl-btn-restore')?.addEventListener('click', () => restoreItem(li, item.id));
+    li.querySelector('.rl-btn-delete')?.addEventListener('click', () => deleteItem(li, item.id));
+    return li;
+  }
+
+  async function apiItem(method: string, id: number) {
+    return fetch(`${SITE_URL}/api/read-later/${id}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
+      body: JSON.stringify({ id }),
+    });
+  }
+
+  async function restoreItem(li: HTMLLIElement, id: number) {
+    li.style.opacity = '0';
+    li.style.transform = 'translateX(-20px)';
+    await apiItem('PATCH', id);
+    setTimeout(() => li.remove(), 300);
+  }
+
+  async function deleteItem(li: HTMLLIElement, id: number) {
+    if (!confirm('Permanently delete this item?')) return;
+    li.style.opacity = '0';
+    li.style.transform = 'translateX(20px)';
+    await apiItem('DELETE', id);
+    setTimeout(() => li.remove(), 300);
+  }
+
+  function escHtml(str: string): string {
+    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  loadArchive();
+</script>

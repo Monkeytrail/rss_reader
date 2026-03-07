@@ -102,6 +102,19 @@ export async function initSchema(): Promise<void> {
       errors INTEGER NOT NULL DEFAULT 0,
       duration_ms INTEGER NOT NULL DEFAULT 0
     )`,
+    `CREATE TABLE IF NOT EXISTS read_later (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      url         TEXT NOT NULL UNIQUE,
+      title       TEXT,
+      description TEXT,
+      image_url   TEXT,
+      source_type TEXT NOT NULL DEFAULT 'article',
+      added_at    TEXT NOT NULL DEFAULT (datetime('now')),
+      read_at     TEXT,
+      yt_channel  TEXT,
+      yt_duration TEXT
+    )`,
+    `CREATE INDEX IF NOT EXISTS idx_read_later_queue ON read_later(read_at, added_at DESC)`,
   ]);
 
   // Add conditional-fetching columns (idempotent: ignores "duplicate column" errors)

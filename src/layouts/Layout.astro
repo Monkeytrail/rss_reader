@@ -214,6 +214,68 @@ const buildTime = new Date().toISOString();
         }
       });
 
+      // Read Later button handling
+      const RL_API = 'https://rss-pardoena.netlify.app/api/read-later';
+      const RL_TOKEN_KEY = 'rl-token';
+
+      // Mark already-saved articles on load
+      (async () => {
+        const token = localStorage.getItem(RL_TOKEN_KEY);
+        if (!token) return;
+        try {
+          const res = await fetch(`${RL_API}?token=${encodeURIComponent(token)}`);
+          if (!res.ok) return;
+          const data = await res.json();
+          const savedUrls = new Set<string>(data.items.map((i: any) => i.url));
+          document.querySelectorAll<HTMLElement>('.read-later-button').forEach((btn) => {
+            if (savedUrls.has((btn as HTMLButtonElement).dataset.url || '')) {
+              btn.textContent = '🔖 Saved';
+              btn.classList.add('rl-saved');
+            }
+          });
+        } catch { /* silent */ }
+      })();
+
+      document.addEventListener('click', async (e) => {
+        const btn = (e.target as Element).closest<HTMLButtonElement>('.read-later-button');
+        if (!btn || btn.classList.contains('rl-saved') || btn.classList.contains('rl-saving')) return;
+
+        const token = localStorage.getItem(RL_TOKEN_KEY);
+        if (!token) {
+          window.location.href = '/read-later';
+          return;
+        }
+
+        const url = btn.dataset.url!;
+        const title = btn.dataset.title!;
+
+        btn.classList.add('rl-saving');
+        btn.textContent = '…';
+
+        try {
+          const res = await fetch(RL_API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ url, title }),
+          });
+          if (res.ok) {
+            btn.textContent = '🔖 Saved';
+            btn.classList.remove('rl-saving');
+            btn.classList.add('rl-saved');
+          } else {
+            throw new Error('failed');
+          }
+        } catch {
+          btn.textContent = '✕ Error';
+          btn.style.color = '#e53e3e';
+          setTimeout(() => {
+            btn.textContent = '🔖 Later';
+            btn.style.color = '';
+            btn.classList.remove('rl-saving');
+          }, 2000);
+        }
+      });
+
       // j/k Keyboard Navigation
       let focusedIndex = -1;
 

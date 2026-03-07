@@ -63,6 +63,63 @@ for (const article of articles) {
   </main>
 
   <script>
+    // Read Later items — inject at top of feed if token is set
+    (async () => {
+      const token = localStorage.getItem('rl-token');
+      if (!token) return;
+
+      try {
+        const res = await fetch(
+          `https://rss-pardoena.netlify.app/api/read-later?token=${encodeURIComponent(token)}`
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.items?.length) return;
+
+        const articleList = document.querySelector('.article-list');
+        if (!articleList) return;
+
+        const section = document.createElement('section');
+        section.className = 'day-group read-later-group';
+        section.innerHTML = `<h2 class="day-label">&#x1F4CC; Read Later</h2>`;
+
+        for (const item of data.items) {
+          const isYt = item.source_type === 'youtube';
+          const domain = (() => { try { return new URL(item.url).hostname; } catch { return item.url; } })();
+          const esc = (s: string) => (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+          const article = document.createElement('article');
+          article.className = 'article-card read-later-card';
+          article.dataset.articleId = `rl-${item.id}`;
+          article.innerHTML = `
+            <h3 class="article-title">
+              ${isYt
+                ? `<a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer">${esc(item.title || item.url)}</a>`
+                : `<button class="read-in-app article-title-btn" data-url="${esc(item.url)}">${esc(item.title || item.url)}</button>`
+              }
+            </h3>
+            <div class="article-meta">
+              ${item.image_url ? `<img src="${esc(item.image_url)}" alt="" class="feed-icon" width="16" height="16" loading="lazy" />` : ''}
+              <span class="read-later-badge">&#x1F4CC; Read Later</span>
+              <span class="separator">&middot;</span>
+              <span>${esc(item.yt_channel || domain)}</span>
+              <span class="separator">&middot;</span>
+              <time>${new Date(item.added_at).toLocaleDateString('nl-BE')}</time>
+              ${isYt ? `<span class="separator">&middot;</span><span>&#x25B6; YouTube</span>` : ''}
+            </div>
+            ${item.description ? `<p class="article-summary">${esc(item.description)}</p>` : ''}
+            <div class="article-actions">
+              ${!isYt ? `<button class="action-button read-in-app" data-url="${esc(item.url)}">Read in app</button>` : ''}
+              <a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer" class="action-button">Open original &#x2197;</a>
+            </div>`;
+
+          section.appendChild(article);
+        }
+
+        articleList.prepend(section);
+      } catch { /* silent */ }
+    })();
+
     // Saved articles filter (activated via /#saved)
     import { getAllBookmarks } from '../lib/bookmarks';
 

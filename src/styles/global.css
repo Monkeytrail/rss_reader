@@ -561,6 +561,53 @@ h2 {
   background: var(--color-bg-secondary);
 }
 
+/* ===== Read Later button (ArticleCard) ===== */
+.read-later-button.rl-saving {
+  opacity: 0.6;
+  pointer-events: none;
+  animation: rl-pulse 0.8s ease-in-out infinite;
+}
+
+.read-later-button.rl-saved {
+  color: var(--color-accent);
+  pointer-events: none;
+}
+
+@keyframes rl-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* ===== Read Later card in main feed ===== */
+.read-later-card {
+  border-left: 3px solid var(--color-accent);
+  padding-left: calc(var(--space-md) - 3px);
+  background: color-mix(in srgb, var(--color-accent) 4%, transparent);
+}
+
+.read-later-badge {
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.article-title-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: inherit;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+  font-weight: 500;
+}
+
+.article-title-btn:hover {
+  color: var(--color-accent);
+}
+
 /* ===== Logout ===== */
 .logout-btn {
   background: none;
