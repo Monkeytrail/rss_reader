@@ -229,7 +229,7 @@ const buildTime = new Date().toISOString();
           const savedUrls = new Set<string>(data.items.map((i: any) => i.url));
           document.querySelectorAll<HTMLElement>('.read-later-button').forEach((btn) => {
             if (savedUrls.has((btn as HTMLButtonElement).dataset.url || '')) {
-              btn.textContent = '🔖 Saved';
+              btn.textContent = '★ Saved';
               btn.classList.add('rl-saved');
             }
           });
@@ -259,7 +259,7 @@ const buildTime = new Date().toISOString();
             body: JSON.stringify({ url, title }),
           });
           if (res.ok) {
-            btn.textContent = '🔖 Saved';
+            btn.textContent = '★ Saved';
             btn.classList.remove('rl-saving');
             btn.classList.add('rl-saved');
           } else {
@@ -269,7 +269,7 @@ const buildTime = new Date().toISOString();
           btn.textContent = '✕ Error';
           btn.style.color = '#e53e3e';
           setTimeout(() => {
-            btn.textContent = '🔖 Later';
+            btn.textContent = '☆ Save';
             btn.style.color = '';
             btn.classList.remove('rl-saving');
           }, 2000);
