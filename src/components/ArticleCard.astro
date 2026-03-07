@@ -24,7 +24,7 @@ const trimmedSummary = summary ? truncate(summary, 160) : '';
 
 <article class="article-card" data-searchable={searchableText} data-article-id={id} data-feed-url={feedUrl}>
   <h3 class="article-title">
-    <a href={link} target="_blank" rel="noopener noreferrer">{title}</a>
+    <button class="read-in-app article-title-btn" data-url={link}>{title}</button>
   </h3>
   <div class="article-meta">
     <img
@@ -54,7 +54,7 @@ const trimmedSummary = summary ? truncate(summary, 160) : '';
       aria-label="Save for later"
       data-url={link}
       data-title={title}
-    >&#x1F516; Later</button>
-    <button class="action-button read-in-app" data-url={link}>Read in app</button>
+    >&#x1F516; Save</button>
+    <a href={link} target="_blank" rel="noopener noreferrer" class="action-button">Read original &#x2197;</a>
   </div>
 </article>
