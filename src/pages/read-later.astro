@@ -29,7 +29,7 @@ import Header from '../components/Header.astro';
         <ol class="rl-instructions">
           <li>Open the Shortcuts app and tap <strong>+</strong></li>
           <li>Add action: <strong>Get Contents of URL</strong></li>
-          <li>Set URL to: <code id="api-url-display">https://rss-pardoena.netlify.app/.netlify/functions/read-later</code></li>
+          <li>Set URL to: <code id="api-url-display">https://rss-pardoena.netlify.app/.netlify/functions/read-later</code> <button id="copy-api-url" class="copy-url-btn" aria-label="Copy URL" title="Copy URL">&#x1F4CB;</button></li>
           <li>Method: <strong>POST</strong></li>
           <li>Headers: <code>Content-Type: application/json</code>, <code>Authorization: Bearer YOUR_TOKEN</code></li>
           <li>Body: <code>&#123;"url":"&#123;Shortcut Input&#125;"&#125;</code></li>
@@ -93,6 +93,8 @@ import Header from '../components/Header.astro';
   .rl-instructions { font-size: var(--font-size-sm); color: var(--color-text-secondary); padding-left: var(--space-lg); }
   .rl-instructions li { margin-bottom: var(--space-xs); }
   .rl-instructions code { background: var(--color-bg-secondary); padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.85em; }
+  .copy-url-btn { background: none; border: none; cursor: pointer; padding: 0 0.25em; font-size: 1em; vertical-align: middle; opacity: 0.6; }
+  .copy-url-btn:hover { opacity: 1; }
 
   .rl-add { margin-bottom: var(--space-lg); }
   .rl-add-form { display: flex; gap: var(--space-sm); }
@@ -148,6 +150,15 @@ import Header from '../components/Header.astro';
   const SITE_URL = 'https://rss-pardoena.netlify.app';
   const API = `${SITE_URL}/.netlify/functions/read-later`;
   const TOKEN_KEY = 'rl-token';
+
+  // ── Copy API URL button ──────────────────────────────────────────────────────
+  document.getElementById('copy-api-url')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget as HTMLButtonElement;
+    const url = (document.getElementById('api-url-display') as HTMLElement).textContent || '';
+    await navigator.clipboard.writeText(url);
+    btn.textContent = '✓';
+    setTimeout(() => { btn.textContent = '📋'; }, 1500);
+  });
 
   // ── Token management ────────────────────────────────────────────────────────
   const tokenInput = document.getElementById('token-input') as HTMLInputElement;
