@@ -36,7 +36,8 @@
         { "title": "Max Böck", "url": "https://mxb.dev/feed.xml" },
         { "title": "Hidde de Vries", "url": "https://hidde.blog/feed" },
         { "title": "Stephanie Eckles", "url": "https://thinkdobecreate.com/feed/" },
-        { "title": "Michelle Barker", "url": "https://css-irl.info/rss.xml" }
+        { "title": "Michelle Barker", "url": "https://css-irl.info/rss.xml" },
+        { "title": "Chris Coyier", "url": "https://chriscoyier.net/feed/" }
       ]
     },
     {
@@ -66,7 +67,11 @@
         { "title": "Maggie Appleton", "url": "https://maggieappleton.com/rss.xml" },
         { "title": "Jim Nielsen", "url": "https://blog.jim-nielsen.com/feed.xml" },
         { "title": "Brad Frost", "url": "https://bradfrost.com/feed" },
-        { "title": "Jeremy Keith", "url": "https://adactio.com/articles/rss" }
+        { "title": "Jeremy Keith", "url": "https://adactio.com/articles/rss" },
+        { "title": "Matthew Strom", "url": "https://matthewstrom.com/feed.xml" },
+        { "title": "Frank Chimero", "url": "https://frankchimero.com/feed.xml" },
+        { "title": "Robin Rendle", "url": "https://robinrendle.com/feed.xml" },
+        { "title": "Dan Mall", "url": "https://danmall.com/rss.xml" }
       ]
     },
     {
@@ -83,7 +88,10 @@
         { "title": "Austin Kleon", "url": "https://austinkleon.com/feed/" },
         { "title": "Marco Arment", "url": "https://marco.org/rss" },
         { "title": "Bartosz Ciechanowski", "url": "https://ciechanow.ski/atom.xml" },
-        { "title": "The Verge", "url": "https://www.theverge.com/rss/index.xml" }
+        { "title": "The Verge", "url": "https://www.theverge.com/rss/index.xml" },
+        { "title": "Kottke", "url": "https://feeds.kottke.org/main" },
+        { "title": "Craig Mod", "url": "https://craigmod.com/rss/" },
+        { "title": "Tom MacWright", "url": "https://macwright.com/atom.xml" }
       ]
     },
     {
@@ -98,7 +106,10 @@
         { "title": "Xe Iaso", "url": "https://xeiaso.net/blog.rss" },
         { "title": "Brandur Leach", "url": "https://brandur.org/articles.atom" },
         { "title": "Patrick McKenzie", "url": "https://www.kalzumeus.com/feed/" },
-        { "title": "Brian Lovin", "url": "https://brianlovin.com/writing/rss" }
+        { "title": "Brian Lovin", "url": "https://brianlovin.com/writing/rss" },
+        { "title": "Tracy Durnell", "url": "https://tracydurnell.com/feed/" },
+        { "title": "Rubenerd", "url": "https://rubenerd.com/feed/" },
+        { "title": "Matt Webb", "url": "https://interconnected.org/home/feed" }
       ]
     },
     {
@@ -164,7 +175,8 @@
         { "title": "Swedish Adventures", "url": "https://swedishadventures.com/feed" },
         { "title": "Hej Sweden", "url": "https://hejsweden.com/feed" },
         { "title": "Slow Travel Stockholm", "url": "https://slowtravelstockholm.com/feed" },
-        { "title": "Swedish Freak", "url": "https://swedishfreak.com/feed" }
+        { "title": "Swedish Freak", "url": "https://swedishfreak.com/feed" },
+        { "title": "Niklas Blog", "url": "https://niklasblog.com/feed/" }
       ]
     },
     {

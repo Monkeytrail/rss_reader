@@ -7,6 +7,38 @@ import Header from '../components/Header.astro';
   <Header />
   <main class="container rl-page">
 
+    <!-- Add URL form -->
+    <section class="rl-add">
+      <form id="add-form" class="rl-add-form">
+        <input type="url" id="url-input" placeholder="https://..." required class="rl-url-input" />
+        <button type="submit" class="btn-primary">Save</button>
+      </form>
+      <p id="add-feedback" class="rl-feedback" aria-live="polite"></p>
+    </section>
+
+    <!-- Queue header -->
+    <div class="rl-header">
+      <h1>Read Later <span id="queue-count" class="rl-count"></span></h1>
+    </div>
+
+    <!-- States -->
+    <p id="rl-loading" class="rl-state">Loading…</p>
+    <p id="rl-empty" class="rl-state" hidden>Your queue is empty. Save something to read later!</p>
+    <p id="rl-error" class="rl-state rl-state-error" hidden>Could not load queue. Check your token in Setup.</p>
+
+    <!-- Items list -->
+    <ul id="rl-list" class="rl-list" hidden></ul>
+
+    <!-- Pagination -->
+    <div id="rl-more-container" hidden>
+      <button id="rl-more-btn" class="btn-secondary rl-more-btn">Show more</button>
+    </div>
+
+    <!-- Archive link -->
+    <p id="rl-archive-link" class="rl-archive-link" hidden>
+      <a href="/read-later/archive">View archive</a>
+    </p>
+
     <!-- Token setup -->
     <details id="token-setup" class="rl-token-setup">
       <summary>⚙️ Setup</summary>
@@ -41,38 +73,6 @@ import Header from '../components/Header.astro';
       </div>
     </details>
 
-    <!-- Add URL form -->
-    <section class="rl-add">
-      <form id="add-form" class="rl-add-form">
-        <input type="url" id="url-input" placeholder="https://..." required class="rl-url-input" />
-        <button type="submit" class="btn-primary">Save</button>
-      </form>
-      <p id="add-feedback" class="rl-feedback" aria-live="polite"></p>
-    </section>
-
-    <!-- Queue header -->
-    <div class="rl-header">
-      <h1>Read Later <span id="queue-count" class="rl-count"></span></h1>
-    </div>
-
-    <!-- States -->
-    <p id="rl-loading" class="rl-state">Loading…</p>
-    <p id="rl-empty" class="rl-state" hidden>Your queue is empty. Save something to read later!</p>
-    <p id="rl-error" class="rl-state rl-state-error" hidden>Could not load queue. Check your token in Setup.</p>
-
-    <!-- Items list -->
-    <ul id="rl-list" class="rl-list" hidden></ul>
-
-    <!-- Pagination -->
-    <div id="rl-more-container" hidden>
-      <button id="rl-more-btn" class="btn-secondary rl-more-btn">Show more</button>
-    </div>
-
-    <!-- Archive link -->
-    <p id="rl-archive-link" class="rl-archive-link" hidden>
-      <a href="/read-later/archive">View archive</a>
-    </p>
-
   </main>
 </Layout>
 
@@ -80,6 +80,7 @@ import Header from '../components/Header.astro';
   .rl-page { max-width: 720px; margin-inline: auto; padding-block: var(--space-lg); }
 
   .rl-token-setup {
+    margin-top: var(--space-xl);
     margin-bottom: var(--space-lg);
     border: 1px solid var(--color-border);
     border-radius: 8px;
