@@ -18,7 +18,8 @@ interface Props {
 const { id, title, link, pubDate, summary, feedUrl, feedTitle, feedFavicon, category, categorySlug, readingTime } = Astro.props;
 
 const searchableText = [title, feedTitle, category, summary].filter(Boolean).join(' ');
-const relativeDate = formatRelativeDate(pubDate);
+const validDate = pubDate instanceof Date && isFinite(pubDate.getTime()) ? pubDate : null;
+const relativeDate = validDate ? formatRelativeDate(validDate) : '';
 const trimmedSummary = summary ? truncate(summary, 160) : '';
 ---
 
@@ -37,7 +38,7 @@ const trimmedSummary = summary ? truncate(summary, 160) : '';
     />
     <span>{feedTitle}</span>
     <span class="separator">&middot;</span>
-    <time datetime={pubDate.toISOString()}>{relativeDate}</time>
+    <time datetime={validDate ? validDate.toISOString() : ''}>{relativeDate}</time>
     {readingTime > 0 && (
       <>
         <span class="separator">&middot;</span>
