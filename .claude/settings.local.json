@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(python3:*)",
+      "Bash(npm run build:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: Astro RSS Reader PWA\n\nStatic RSS reader built with Astro featuring:\n- Feed aggregation from feeds.json, OPML files, and custom user feeds\n- Category-based organization with 8 predefined categories\n- Client-side search with keyboard shortcuts\n- Dark/light theme toggle with system preference support\n- PWA with service worker for offline reading\n- Netlify functions for scheduled builds and live feed fetching\n- Build-time feed caching for fast static generation\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:sarasoueidan.com)",
+      "WebFetch(domain:lea.verou.me)",
+      "WebFetch(domain:ishadeed.com)"
+    ]
+  }
+}

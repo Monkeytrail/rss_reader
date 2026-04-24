@@ -1,0 +1,46 @@
+/* pastis-tokens.css
+ * Subset of Pastis Design System tokens for the RSS reader.
+ * Source: pastis-design-system/src/tokens/colors.css + typography.css
+ * Values are copied (not @import-ed) to keep the build self-contained.
+ * All tokens are prefixed --pastis-* to avoid collision with RSS reader vars.
+ */
+
+:root {
+  /* ── Brand palette ── */
+  --pastis-black:  #0d0d0d;
+  --pastis-dark:   #0f0d0e;
+  --pastis-white:  #ffffff;
+  --pastis-yellow: #fcba28;
+  --pastis-orange: #fc7428;
+  --pastis-green:  #0ba95b;
+  --pastis-blue:   #12b5e5;
+  --pastis-red:    #ed203d;
+  --pastis-beige:  #f9f4da;
+
+  /* ── Gray scale ── */
+  --pastis-gray-700: #131519;
+  --pastis-gray-600: #1d2025;
+  --pastis-gray-500: #383c44;
+  --pastis-gray-400: #5c6069;
+  --pastis-gray-300: #767980;
+  --pastis-gray-200: #b1b4b9;
+  --pastis-gray-100: #e1e2e4;
+
+  /* ── Dark semantic tokens ── */
+  --pastis-bg-primary:   #0d0d0d;
+  --pastis-bg-card:      #1e1e1e;
+  --pastis-bg-elevated:  #262522;
+  --pastis-text-primary: #f9f4da;   /* beige — 13.6:1 on #0d0d0d */
+  --pastis-text-tertiary: #909498;  /* 5.4:1 on #1e1e1e */
+  --pastis-border:       #383c44;
+
+  /* ── Action ── */
+  --pastis-action-primary:      #fcba28;  /* yellow CTA */
+  --pastis-action-primary-text: #0d0d0d;  /* dark text on yellow — WCAG 12.6:1 */
+  --pastis-action-destructive:  #ed203d;
+
+  /* ── Status ── */
+  --pastis-status-success: #0ba95b;
+  --pastis-status-error:   #f0505e;
+  --pastis-status-info:    #12b5e5;
+}
