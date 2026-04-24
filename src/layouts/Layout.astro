@@ -20,8 +20,7 @@ const buildTime = new Date().toISOString();
     <meta name="description" content={description} />
 
     <!-- PWA -->
-    <meta name="theme-color" content="#0066cc" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#1a1a1a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fcba28" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Reader" />
@@ -30,12 +29,6 @@ const buildTime = new Date().toISOString();
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <title>{title}</title>
-
-    <script is:inline>
-      // Apply saved theme before render to prevent flash
-      const t = localStorage.getItem('theme');
-      if (t) document.documentElement.setAttribute('data-theme', t);
-    </script>
 
     <script is:inline>
       // Auth gate: redirect to /login if not authenticated

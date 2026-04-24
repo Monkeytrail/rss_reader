@@ -1,11 +1,14 @@
-/* ===== Design Tokens ===== */
+/* ===== Pastis Design System — token bridge ===== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import './pastis-tokens.css';
+
 :root {
-  --color-bg: #fafafa;
-  --color-bg-secondary: #ffffff;
-  --color-text: #1a1a1a;
-  --color-text-secondary: #666666;
-  --color-accent: #0066cc;
-  --color-border: #e5e5e5;
+  --color-bg:           var(--pastis-bg-primary);    /* #0d0d0d */
+  --color-bg-secondary: var(--pastis-bg-card);       /* #1e1e1e */
+  --color-text:         var(--pastis-text-primary);  /* #f9f4da beige */
+  --color-text-secondary: var(--pastis-text-tertiary); /* #909498 */
+  --color-accent:       var(--pastis-action-primary); /* #fcba28 yellow */
+  --color-border:       var(--pastis-border);         /* #383c44 */
 
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
@@ -13,7 +16,7 @@
   --space-lg: 1.5rem;
   --space-xl: 2rem;
 
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
   --font-size-lg: 1.125rem;
@@ -22,28 +25,6 @@
 
   --max-width: 680px;
   --header-height: 3.5rem;
-}
-
-/* Dark mode: system preference */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --color-bg: #0a0a0a;
-    --color-bg-secondary: #1a1a1a;
-    --color-text: #e5e5e5;
-    --color-text-secondary: #999999;
-    --color-accent: #4d9fff;
-    --color-border: #333333;
-  }
-}
-
-/* Dark mode: manual override */
-[data-theme='dark'] {
-  --color-bg: #0a0a0a;
-  --color-bg-secondary: #1a1a1a;
-  --color-text: #e5e5e5;
-  --color-text-secondary: #999999;
-  --color-accent: #4d9fff;
-  --color-border: #333333;
 }
 
 /* ===== Reset ===== */
@@ -165,7 +146,7 @@ h2 {
 }
 
 .article-card.new-article {
-  border-left: 3px solid #22c55e;
+  border-left: 3px solid var(--pastis-green);
   padding-left: calc(var(--space-md) - 3px);
 }
 
@@ -419,7 +400,7 @@ h2 {
 
 .category-nav a.active {
   background: var(--color-accent);
-  color: #fff;
+  color: var(--pastis-action-primary-text); /* #0d0d0d — 12.6:1 on yellow */
 }
 
 .category-more {
@@ -598,7 +579,7 @@ h2 {
   margin: 0;
   font: inherit;
   font-size: inherit;
-  color: var(--color-text);
+  color: #ffffff !important;
   cursor: pointer;
   text-align: left;
   font-weight: 500;
@@ -696,7 +677,7 @@ h2 {
 
 .btn-primary {
   background: var(--color-accent);
-  color: white;
+  color: var(--pastis-action-primary-text); /* #0d0d0d — dark text on yellow, WCAG 12.6:1 */
   border: none;
 }
 
@@ -755,7 +736,7 @@ h2 {
 }
 
 .remove-feed:hover {
-  color: #e53e3e;
+  color: var(--pastis-red);
 }
 
 .feed-item[hidden] {
@@ -779,7 +760,7 @@ h2 {
 .feed-error-message {
   display: block;
   font-size: 0.8em;
-  color: #e53e3e;
+  color: var(--pastis-red);
   margin-top: var(--space-xs);
   word-break: break-all;
 }
