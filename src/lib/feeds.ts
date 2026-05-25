@@ -123,52 +123,24 @@ function getFaviconUrl(feedUrl: string): string {
 }
 
 export async function getAllFeedSources(): Promise<FeedSource[]> {
-  try {
-    const { getDb, initSchema } = await import('./discovery/db');
-    await initSchema();
-    const db = getDb();
+  const { getDb, initSchema } = await import('./discovery/db');
+  await initSchema();
+  const db = getDb();
 
-    const result = await db.execute(
-      `SELECT title, url, category_name, category_slug
-       FROM feeds
-       WHERE hidden = 0
-       ORDER BY category_slug, sort_order`,
-    );
+  const result = await db.execute(
+    `SELECT title, url, category_name, category_slug
+     FROM feeds
+     WHERE hidden = 0
+     ORDER BY category_slug, sort_order`,
+  );
 
-    return result.rows.map((row) => ({
-      title: row.title as string,
-      url: row.url as string,
-      category: row.category_name as string,
-      categorySlug: row.category_slug as string,
-      faviconUrl: getFaviconUrl(row.url as string),
-    }));
-  } catch (error) {
-    console.error('Failed to fetch feeds from Turso, falling back to feeds.json:', error);
-    return getAllFeedSourcesFallback();
-  }
-}
-
-async function getAllFeedSourcesFallback(): Promise<FeedSource[]> {
-  const feedsConfig = await import('../data/feeds.json');
-  const sources: FeedSource[] = [];
-  const seenUrls = new Set<string>();
-
-  for (const category of feedsConfig.categories) {
-    for (const feed of category.feeds) {
-      if (!seenUrls.has(feed.url)) {
-        seenUrls.add(feed.url);
-        sources.push({
-          title: feed.title,
-          url: feed.url,
-          category: category.name,
-          categorySlug: category.slug,
-          faviconUrl: getFaviconUrl(feed.url),
-        });
-      }
-    }
-  }
-
-  return sources;
+  return result.rows.map((row) => ({
+    title: row.title as string,
+    url: row.url as string,
+    category: row.category_name as string,
+    categorySlug: row.category_slug as string,
+    faviconUrl: getFaviconUrl(row.url as string),
+  }));
 }
 
 // Cache fetched articles across pages during a single build
@@ -323,19 +295,21 @@ async function recordFeedHealthSnapshot(sources: FeedSource[]): Promise<void> {
 
 // Display order matching feeds.json; unlisted categories appear at the end
 const CATEGORY_ORDER: string[] = [
-  'music',
-  'smart-home',
-  'webdevelopment',
   'pc-gaming',
+  'webdevelopment',
   'ux-ui',
   'tech-longreads',
   'tech-bloggers',
+  'bikepacking',
+  'music',
+  'smart-home',
   'ai',
   'linux-pi',
   'entertainment',
   'culinair',
   'board-games',
   'sverige',
+  'discovered',
   'youtube',
 ];
 

@@ -7,12 +7,14 @@ interface Props {
 
 const { activeSlug } = Astro.props;
 const categories = await getCategories();
+const youtube = categories.find(cat => cat.slug === 'youtube');
+const navCategories = categories.filter(cat => cat.slug !== 'youtube');
 ---
 
 <div class="category-nav-wrapper">
   <nav class="category-nav">
     <a href="/" class:list={['category-link', { active: !activeSlug }]}>All</a>
-    {categories.map((cat) => (
+    {navCategories.map((cat) => (
       <a
         href={`/category/${cat.slug}`}
         class:list={['category-link', { active: activeSlug === cat.slug }]}
@@ -21,6 +23,14 @@ const categories = await getCategories();
       </a>
     ))}
   </nav>
+  {youtube && (
+    <a
+      href={`/category/${youtube.slug}`}
+      class:list={['category-pinned', { active: activeSlug === youtube.slug }]}
+    >
+      {youtube.name}
+    </a>
+  )}
   <div class="category-more" style="display:none">
     <button class="category-more-btn">More &#9662;</button>
     <div class="category-dropdown" style="display:none"></div>

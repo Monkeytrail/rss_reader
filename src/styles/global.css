@@ -378,7 +378,7 @@ h2 {
   align-items: center;
   gap: var(--space-sm);
   overflow: hidden;
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
 }
 
@@ -401,6 +401,28 @@ h2 {
 .category-nav a.active {
   background: var(--color-accent);
   color: var(--pastis-action-primary-text); /* #0d0d0d — 12.6:1 on yellow */
+}
+
+.category-pinned {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: 100px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.category-pinned:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.category-pinned.active {
+  background: var(--color-accent);
+  color: var(--pastis-action-primary-text);
 }
 
 .category-more {
