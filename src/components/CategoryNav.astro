@@ -85,6 +85,28 @@ const navCategories = categories.filter(cat => cat.slug !== 'youtube');
       window.addEventListener('load', redistribute);
     }
     window.addEventListener('resize', redistribute);
+
+    // Hide on scroll down, show on scroll up
+    let lastY = window.scrollY;
+    let upDelta = 0;
+
+    window.addEventListener('scroll', () => {
+      const currentY = window.scrollY;
+      const diff = currentY - lastY;
+
+      if (currentY <= 0) {
+        upDelta = 0;
+        wrapper.classList.remove('nav-hidden');
+      } else if (diff < 0) {
+        upDelta += -diff;
+        if (upDelta > 80) wrapper.classList.remove('nav-hidden');
+      } else if (diff > 0) {
+        upDelta = 0;
+        if (currentY > wrapper.offsetHeight) wrapper.classList.add('nav-hidden');
+      }
+
+      lastY = currentY;
+    }, { passive: true });
   }
 
   initCategoryNav();

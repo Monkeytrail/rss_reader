@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rss-reader-v4';
+const CACHE_NAME = 'rss-reader-v5';
 const STATIC_ASSETS = ['/', '/manifest.json'];
 
 // Install: cache static assets
