@@ -1,5 +1,5 @@
 ---
-import { formatRelativeDate, truncate } from '../lib/utils';
+import { formatRelativeDate, truncate, toFeedSlug } from '../lib/utils';
 
 interface Props {
   id: string;
@@ -36,7 +36,7 @@ const trimmedSummary = summary ? truncate(summary, 160) : '';
       height="16"
       loading="lazy"
     />
-    <span>{feedTitle}</span>
+    <a href={`/source/${toFeedSlug(feedTitle)}`} class="source-link">{feedTitle}</a>
     <span class="separator">&middot;</span>
     <time datetime={validDate ? validDate.toISOString() : ''}>{relativeDate}</time>
     {readingTime > 0 && (

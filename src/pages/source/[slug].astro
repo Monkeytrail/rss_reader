@@ -1,0 +1,160 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import CategoryNav from '../../components/CategoryNav.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import VideoCard from '../../components/VideoCard.astro';
+import { fetchAllFeeds, getAllFeedSources } from '../../lib/feeds';
+import { getDayLabel, toFeedSlug } from '../../lib/utils';
+
+export async function getStaticPaths() {
+  const sources = await getAllFeedSources();
+  return sources.map((source) => ({
+    params: { slug: toFeedSlug(source.title) },
+    props: {
+      feedUrl: source.url,
+      feedTitle: source.title,
+      feedFavicon: source.faviconUrl,
+      categorySlug: source.categorySlug,
+      categoryName: source.category,
+    },
+  }));
+}
+
+const { feedUrl, feedTitle, feedFavicon, categorySlug, categoryName } = Astro.props;
+
+const allItems = await fetchAllFeeds();
+const items = allItems.filter((item) => item.feedUrl === feedUrl);
+
+const dayGroups = new Map<string, typeof items>();
+for (const item of items) {
+  const label = getDayLabel(item.pubDate);
+  if (!dayGroups.has(label)) {
+    dayGroups.set(label, []);
+  }
+  dayGroups.get(label)!.push(item);
+}
+---
+
+<Layout title={`${feedTitle} - RSS Reader`}>
+  <Header />
+  <CategoryNav activeSlug={categorySlug} />
+
+  <main class="container">
+    <div class="source-header">
+      <img src={feedFavicon} alt="" class="source-favicon" width="24" height="24" />
+      <div>
+        <h1>{feedTitle}</h1>
+        <a href={`/category/${categorySlug}`} class="breadcrumb">&larr; {categoryName}</a>
+      </div>
+    </div>
+
+    <div class="article-list">
+      {[...dayGroups.entries()].map(([dayLabel, dayItems], index) => (
+        <section class="day-group" data-day-index={index} hidden={index >= 3}>
+          <h2 class="day-label">{dayLabel}</h2>
+          {dayItems.map((item) => (
+            item.mediaType === 'video' ? (
+              <VideoCard
+                id={item.id}
+                title={item.title}
+                link={item.link}
+                pubDate={item.pubDate}
+                summary={item.summary}
+                feedUrl={item.feedUrl}
+                feedTitle={item.feedTitle}
+                feedFavicon={item.feedFavicon}
+                category={item.category}
+                categorySlug={item.categorySlug}
+                thumbnail={item.thumbnail}
+                videoId={item.videoId}
+              />
+            ) : (
+              <ArticleCard
+                id={item.id}
+                title={item.title}
+                link={item.link}
+                pubDate={item.pubDate}
+                summary={item.summary}
+                feedUrl={item.feedUrl}
+                feedTitle={item.feedTitle}
+                feedFavicon={item.feedFavicon}
+                category={item.category}
+                categorySlug={item.categorySlug}
+                readingTime={item.readingTime}
+              />
+            )
+          ))}
+        </section>
+      ))}
+
+      {dayGroups.size > 3 && (
+        <div class="load-more-container">
+          <button id="load-more-btn" class="btn-secondary load-more-btn">
+            Show older ({dayGroups.size - 3} more days)
+          </button>
+        </div>
+      )}
+    </div>
+
+    {items.length === 0 && (
+      <p class="no-results">No recent items from this source.</p>
+    )}
+  </main>
+
+  <script>
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (loadMoreBtn) {
+      const LOAD_INCREMENT = 5;
+      let currentlyVisible = 3;
+      const allDayGroups = document.querySelectorAll<HTMLElement>('.day-group[data-day-index]');
+      const totalDays = allDayGroups.length;
+
+      loadMoreBtn.addEventListener('click', () => {
+        const nextBatch = Math.min(currentlyVisible + LOAD_INCREMENT, totalDays);
+        for (let i = currentlyVisible; i < nextBatch; i++) {
+          allDayGroups[i].hidden = false;
+        }
+        currentlyVisible = nextBatch;
+
+        const remaining = totalDays - currentlyVisible;
+        if (remaining <= 0) {
+          loadMoreBtn.style.display = 'none';
+        } else {
+          loadMoreBtn.textContent = `Show older (${remaining} more day${remaining === 1 ? '' : 's'})`;
+        }
+      });
+    }
+  </script>
+</Layout>
+
+<style>
+  .source-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+
+  .source-favicon {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .source-header h1 {
+    margin: 0 0 var(--space-xs);
+    font-size: var(--font-size-xl);
+  }
+
+  .breadcrumb {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+  }
+
+  .breadcrumb:hover {
+    color: var(--color-accent);
+  }
+</style>

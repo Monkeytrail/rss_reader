@@ -69,6 +69,10 @@ export function calculateReadingTime(text: string | undefined): number {
   return Math.max(1, Math.ceil(words / WORDS_PER_MINUTE));
 }
 
+export function toFeedSlug(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 export function escapeHtml(text: string): string {
   const div = document.createElement('div');
   div.textContent = text;

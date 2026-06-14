@@ -1,5 +1,5 @@
 ---
-import { formatRelativeDate, truncate } from '../lib/utils';
+import { formatRelativeDate, truncate, toFeedSlug } from '../lib/utils';
 
 interface Props {
   id: string;
@@ -41,7 +41,7 @@ const relativeDate = formatRelativeDate(pubDate);
 
     <div class="video-meta">
       <img src={feedFavicon} alt="" class="feed-icon" width="16" height="16" loading="lazy" />
-      <span class="feed-title">{feedTitle}</span>
+      <a href={`/source/${toFeedSlug(feedTitle)}`} class="source-link feed-title">{feedTitle}</a>
       <span class="separator">&middot;</span>
       <time datetime={pubDate.toISOString()}>{relativeDate}</time>
       <span class="separator">&middot;</span>
@@ -156,6 +156,14 @@ const relativeDate = formatRelativeDate(pubDate);
     color: var(--color-text-secondary);
     font-size: var(--font-size-sm);
     flex-wrap: wrap;
+  }
+
+  .video-meta a {
+    color: var(--color-text-secondary);
+  }
+
+  .video-meta a:hover {
+    color: var(--color-accent);
   }
 
   .feed-icon {

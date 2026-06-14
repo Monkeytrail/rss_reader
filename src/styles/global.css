@@ -198,6 +198,14 @@ h2 {
   overflow: hidden;
 }
 
+.source-link {
+  color: var(--color-text-secondary);
+}
+
+.source-link:hover {
+  color: var(--color-accent);
+}
+
 .category-tag {
   font-size: 0.75rem;
   color: var(--color-accent);
