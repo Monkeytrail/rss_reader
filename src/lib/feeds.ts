@@ -20,14 +20,23 @@ function isYouTubeFeed(feedUrl: string): boolean {
   return feedUrl.includes('youtube.com/feeds');
 }
 
-async function isYouTubeShort(videoId: string): Promise<boolean> {
+function isYouTubeShortSync(article: { link: string; title: string; summary?: string }): boolean {
+  if (article.link.includes('/shorts/')) return true;
+  const text = (article.title + ' ' + (article.summary ?? '')).toLowerCase();
+  return /#shorts?\b/.test(text);
+}
+
+async function isYouTubeShortHttp(videoId: string): Promise<boolean> {
   try {
     const res = await fetch(`https://www.youtube.com/shorts/${videoId}`, {
-      method: 'HEAD',
-      redirect: 'manual',
+      redirect: 'follow',
       signal: AbortSignal.timeout(5000),
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
     });
-    return res.status === 200;
+    return res.url.includes('/shorts/');
   } catch {
     return false;
   }
@@ -37,14 +46,25 @@ async function filterOutShorts(articles: Article[]): Promise<Article[]> {
   const ytArticles = articles.filter((a) => a.videoId);
   if (ytArticles.length === 0) return articles;
 
-  const results = await Promise.allSettled(
-    ytArticles.map(async (a) => ({ id: a.id, isShort: await isYouTubeShort(a.videoId!) })),
-  );
-
   const shortIds = new Set<string>();
-  for (const r of results) {
-    if (r.status === 'fulfilled' && r.value.isShort) {
-      shortIds.add(r.value.id);
+  const needsHttpCheck: Article[] = [];
+
+  for (const a of ytArticles) {
+    if (isYouTubeShortSync(a)) {
+      shortIds.add(a.id);
+    } else {
+      needsHttpCheck.push(a);
+    }
+  }
+
+  if (needsHttpCheck.length > 0) {
+    const results = await Promise.allSettled(
+      needsHttpCheck.map(async (a) => ({ id: a.id, isShort: await isYouTubeShortHttp(a.videoId!) })),
+    );
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value.isShort) {
+        shortIds.add(r.value.id);
+      }
     }
   }
 
