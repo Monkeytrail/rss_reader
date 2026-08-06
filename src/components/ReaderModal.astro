@@ -54,16 +54,20 @@
       if (!url) return;
 
       // Use embedded RSS feed content when available (avoids fetching bot-protected sites)
+      let rssHtml: string | null = null;
       if (articleId) {
         const template = document.querySelector<HTMLTemplateElement>(`template.rss-content[data-id="${articleId}"]`);
         const textLength = template?.content.textContent?.trim().length ?? 0;
-        if (template && textLength > 500) {
-          displayRssContent(title, template.innerHTML, url);
-          return;
+        if (template && textLength > 0) {
+          rssHtml = template.innerHTML;
+          if (textLength > 500) {
+            displayRssContent(title, rssHtml, url);
+            return;
+          }
         }
       }
 
-      await openReader(url);
+      await openReader(url, rssHtml, title);
     });
 
     function sanitizeClientSide(html: string): string {
@@ -95,7 +99,7 @@
       closeBtn?.focus();
     }
 
-    async function openReader(url: string) {
+    async function openReader(url: string, rssHtml: string | null = null, articleTitle: string = '') {
       loading.hidden = false;
       modal.hidden = true;
       let success = false;
@@ -138,6 +142,8 @@
           modal.hidden = false;
           document.body.style.overflow = 'hidden';
           closeBtn?.focus();
+        } else if (rssHtml) {
+          displayRssContent(articleTitle, rssHtml, url);
         } else {
           window.open(url, '_blank', 'noopener,noreferrer');
         }
