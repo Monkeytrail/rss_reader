@@ -42,7 +42,7 @@ export default async (req: Request, _context: Context) => {
       );
     }
 
-    const cleanContent = sanitizeHtml(article.content);
+    const cleanContent = sanitizeHtml(article.content ?? '');
 
     return new Response(
       JSON.stringify({
@@ -52,7 +52,7 @@ export default async (req: Request, _context: Context) => {
         excerpt: article.excerpt,
         siteName: article.siteName,
         length: article.length,
-        readingTime: Math.ceil(article.length / 200),
+        readingTime: Math.ceil((article.length ?? 0) / 200),
         originalUrl: articleUrl,
       }),
       {

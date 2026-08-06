@@ -13,9 +13,10 @@ interface Props {
   category: string;
   categorySlug: string;
   readingTime: number;
+  content?: string;
 }
 
-const { id, title, link, pubDate, summary, feedUrl, feedTitle, feedFavicon, category, categorySlug, readingTime } = Astro.props;
+const { id, title, link, pubDate, summary, feedUrl, feedTitle, feedFavicon, category, categorySlug, readingTime, content } = Astro.props;
 
 const searchableText = [title, feedTitle, category, summary].filter(Boolean).join(' ');
 const validDate = pubDate instanceof Date && isFinite(pubDate.getTime()) ? pubDate : null;
@@ -25,7 +26,7 @@ const trimmedSummary = summary ? truncate(summary, 160) : '';
 
 <article class="article-card" data-searchable={searchableText} data-article-id={id} data-feed-url={feedUrl}>
   <h3 class="article-title">
-    <button class="read-in-app article-title-btn" data-url={link}>{title}</button>
+    <button class="read-in-app article-title-btn" data-url={link} data-id={id}>{title}</button>
   </h3>
   <div class="article-meta">
     <img
@@ -49,6 +50,7 @@ const trimmedSummary = summary ? truncate(summary, 160) : '';
     <a href={`/category/${categorySlug}`} class="category-tag">{category}</a>
   </div>
   {trimmedSummary && <p class="article-summary">{trimmedSummary}</p>}
+  {content && <template class="rss-content" data-id={id} set:html={content}></template>}
   <div class="article-actions">
     <button
       class="action-button read-later-button"
