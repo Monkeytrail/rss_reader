@@ -56,7 +56,8 @@
       // Use embedded RSS feed content when available (avoids fetching bot-protected sites)
       if (articleId) {
         const template = document.querySelector<HTMLTemplateElement>(`template.rss-content[data-id="${articleId}"]`);
-        if (template && template.innerHTML.trim().length > 200) {
+        const textLength = template?.content.textContent?.trim().length ?? 0;
+        if (template && textLength > 500) {
           displayRssContent(title, template.innerHTML, url);
           return;
         }
