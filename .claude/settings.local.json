@@ -17,7 +17,12 @@
       "WebFetch(domain:lea.verou.me)",
       "WebFetch(domain:ishadeed.com)",
       "Bash(turso --version)",
-      "Bash(npx tsx *)"
+      "Bash(npx tsx *)",
+      "Bash(curl -s \"https://bleedingcool.com/comics/feed/\")",
+      "Bash(curl -s -H \"Accept-Encoding: identity\" \"https://bleedingcool.com/comics/feed/\")",
+      "Bash(curl -s --compressed \"https://bleedingcool.com/comics/feed/\")",
+      "Bash(curl -sI \"https://bleedingcool.com/comics/feed/\")",
+      "Bash(git *)"
     ]
   }
 }

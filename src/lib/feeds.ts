@@ -189,7 +189,13 @@ export async function fetchAllFeeds(): Promise<Article[]> {
   const results = await Promise.allSettled(
     sources.map(async (feed) => {
       try {
-        const parsed = await parser.parseURL(feed.url);
+        const feedResponse = await fetch(feed.url, {
+          headers: { 'User-Agent': 'AstroRSSReader/1.0' },
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!feedResponse.ok) throw new Error(`HTTP ${feedResponse.status}`);
+        const feedText = await feedResponse.text();
+        const parsed = await parser.parseString(feedText);
         cachedParsedFeeds!.set(feed.url, parsed);
         const feedArticles: Article[] = [];
         const isYouTube = isYouTubeFeed(feed.url);
