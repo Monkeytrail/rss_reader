@@ -316,12 +316,13 @@ async function recordFeedHealthSnapshot(sources: FeedSource[]): Promise<void> {
 // Display order matching feeds.json; unlisted categories appear at the end
 const CATEGORY_ORDER: string[] = [
   'pc-gaming',
-  'webdevelopment',
-  'ux-ui',
+  'comics',
   'tech-longreads',
   'tech-bloggers',
   'bikepacking',
   'music',
+  'webdevelopment',
+  'ux-ui',
   'smart-home',
   'ai',
   'linux-pi',

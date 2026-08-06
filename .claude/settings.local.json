@@ -15,7 +15,9 @@
       "Bash(git push:*)",
       "WebFetch(domain:sarasoueidan.com)",
       "WebFetch(domain:lea.verou.me)",
-      "WebFetch(domain:ishadeed.com)"
+      "WebFetch(domain:ishadeed.com)",
+      "Bash(turso --version)",
+      "Bash(npx tsx *)"
     ]
   }
 }
