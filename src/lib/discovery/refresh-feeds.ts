@@ -28,6 +28,15 @@ export interface RefreshFeedsResult {
   rebuildTriggered: boolean;
 }
 
+export async function hasRunToday(): Promise<boolean> {
+  await initSchema();
+  const db = getDb();
+  const result = await db.execute(
+    `SELECT COUNT(*) as c FROM feed_refresh_log WHERE date(run_at) = date('now')`,
+  );
+  return (result.rows[0].c as number) > 0;
+}
+
 async function checkFeed(feed: FeedRow): Promise<FetchResult> {
   const headers: Record<string, string> = {
     'User-Agent': 'AstroRSSReader/1.0',
