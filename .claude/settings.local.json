@@ -22,7 +22,24 @@
       "Bash(curl -s -H \"Accept-Encoding: identity\" \"https://bleedingcool.com/comics/feed/\")",
       "Bash(curl -s --compressed \"https://bleedingcool.com/comics/feed/\")",
       "Bash(curl -sI \"https://bleedingcool.com/comics/feed/\")",
-      "Bash(git *)"
+      "Bash(git *)",
+      "WebSearch",
+      "Bash(node /tmp/claude-1000/-home-thrawn-Development-rss-reader/a1b79b2b-b9d3-4b6a-90a0-3b01390e1c98/scratchpad/check.mjs)",
+      "Bash(gh workflow *)",
+      "Bash(gh run *)",
+      "Bash(npx tsc *)",
+      "Bash(npx astro *)",
+      "Bash(lsof -ti:4321 -sTCP:LISTEN)",
+      "Bash(xargs -r kill)",
+      "Bash(nohup npm run dev)",
+      "Bash(disown)",
+      "Bash(timeout 30 bash -c 'until curl -sf http://localhost:4321 >/dev/null; do sleep 1; done')",
+      "Bash(node -e \"require.resolve\\('playwright'\\)\")",
+      "Bash(npx --no-install playwright --version)",
+      "Bash(curl -s http://localhost:4321/)",
+      "Bash(curl -s http://localhost:4321/category/youtube -o /tmp/claude-1000/-home-thrawn-Development-rss-reader/a1b79b2b-b9d3-4b6a-90a0-3b01390e1c98/scratchpad/youtube-page.html)",
+      "Bash(curl -s \"http://localhost:4321/src/layouts/Layout.astro?astro&type=script&index=0&lang.ts\")",
+      "Bash(curl -s \"http://localhost:4321/src/styles/global.css\")"
     ]
   }
 }

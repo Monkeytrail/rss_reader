@@ -143,11 +143,12 @@ const buildTime = new Date().toISOString();
         }
       });
 
-      // Mark as read when clicking article link or read-in-app
+      // Mark as read/watched when clicking article link, read-in-app, or a video's play controls
       document.addEventListener('click', (e) => {
         const link = (e.target as Element).closest('.article-title a');
         const readBtn = (e.target as Element).closest('.read-in-app');
-        const target = link || readBtn;
+        const videoPlay = (e.target as Element).closest('.video-thumbnail, .play-in-app');
+        const target = link || readBtn || videoPlay;
         if (!target) return;
 
         const card = target.closest<HTMLElement>('[data-article-id]');
