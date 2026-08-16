@@ -1,0 +1,21 @@
+name: Refresh feeds (backup)
+
+# Netlify's own scheduled function (netlify/functions/refresh-feeds-scheduled.ts)
+# runs daily at 08:00 UTC, but Netlify's scheduler is best-effort and
+# occasionally skips a day entirely. This runs 30 minutes later as a safety
+# net — if the Netlify run already happened, this finds nothing new (cheap
+# no-op); if it didn't, this covers the day.
+on:
+  schedule:
+    - cron: '30 8 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger feed refresh
+        run: |
+          curl --fail-with-body -X POST \
+            -H "Authorization: Bearer ${{ secrets.REFRESH_FEEDS_TOKEN }}" \
+            https://rss-pardoena.netlify.app/.netlify/functions/refresh-feeds-manual
