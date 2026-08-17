@@ -1225,6 +1225,10 @@ h2 {
     padding: var(--space-sm) var(--space-md);
   }
 
+  .last-build-time {
+    display: none;
+  }
+
   .search-wrapper {
     order: 3;
     max-width: 100%;
