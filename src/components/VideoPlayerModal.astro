@@ -45,7 +45,7 @@
     if (thumbnail) {
       e.preventDefault();
       const videoId = (thumbnail as HTMLElement).dataset.videoId;
-      const title = thumbnail.closest('.video-card')?.querySelector('.video-title a')?.textContent || '';
+      const title = thumbnail.closest('.video-card')?.querySelector('.video-title')?.textContent || '';
       if (videoId) openVideoPlayer(videoId, title);
       return;
     }

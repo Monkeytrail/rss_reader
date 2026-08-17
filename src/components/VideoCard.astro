@@ -36,7 +36,11 @@ const relativeDate = formatRelativeDate(pubDate);
 
   <div class="video-info">
     <h3 class="video-title">
-      <a href={link} target="_blank" rel="noopener noreferrer">{title}</a>
+      {videoId ? (
+        <button class="play-in-app video-title-btn" data-video-id={videoId} data-title={title}>{title}</button>
+      ) : (
+        <a href={link} target="_blank" rel="noopener noreferrer">{title}</a>
+      )}
     </h3>
 
     <div class="video-meta">
@@ -52,13 +56,8 @@ const relativeDate = formatRelativeDate(pubDate);
 
     <div class="video-actions">
       <a href={link} target="_blank" rel="noopener noreferrer" class="action-link">
-        YouTube &#8599;
+        Watch original &#8599;
       </a>
-      {videoId && (
-        <button class="action-button play-in-app" data-video-id={videoId} data-title={title}>
-          Watch in app
-        </button>
-      )}
     </div>
   </div>
 </article>
@@ -140,12 +139,25 @@ const relativeDate = formatRelativeDate(pubDate);
     margin: 0;
   }
 
-  .video-title a {
+  .video-title a,
+  .video-title-btn {
     color: var(--color-text);
     text-decoration: none;
   }
 
-  .video-title a:hover {
+  .video-title-btn {
+    display: inline;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .video-title a:hover,
+  .video-title-btn:hover {
     color: var(--color-accent);
   }
 
