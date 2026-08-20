@@ -151,9 +151,7 @@ import Header from '../components/Header.astro';
 </style>
 
 <script>
-  const SITE_URL = 'https://rss-pardoena.netlify.app';
-  const API = `${SITE_URL}/.netlify/functions/read-later`;
-  const TOKEN_KEY = 'rl-token';
+  import { READ_LATER_API as API, TOKEN_KEY, getToken, apiItem, escHtml } from '../lib/readLaterApi';
 
   // ── Copy API URL button ──────────────────────────────────────────────────────
   document.getElementById('copy-api-url')?.addEventListener('click', async (e) => {
@@ -171,8 +169,6 @@ import Header from '../components/Header.astro';
   const tokenStatus = document.getElementById('token-status')!;
   const bookmarkletLink = document.getElementById('bookmarklet-link') as HTMLAnchorElement;
   const setupDetails = document.getElementById('token-setup') as HTMLDetailsElement;
-
-  function getToken(): string { return localStorage.getItem(TOKEN_KEY) || ''; }
 
   function updateBookmarklet(token: string) {
     const code = `(function(){
@@ -357,15 +353,6 @@ import Header from '../components/Header.astro';
     return li;
   }
 
-  async function apiItem(method: string, id: number) {
-    const token = getToken();
-    return fetch(`${SITE_URL}/.netlify/functions/read-later-item`, {
-      method,
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ id }),
-    });
-  }
-
   async function markRead(li: HTMLLIElement, id: number) {
     li.style.opacity = '0';
     li.style.transform = 'translateX(20px)';
@@ -379,10 +366,6 @@ import Header from '../components/Header.astro';
     li.style.transform = 'translateX(20px)';
     await apiItem('DELETE', id);
     setTimeout(() => li.remove(), 300);
-  }
-
-  function escHtml(str: string): string {
-    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   loadQueue();

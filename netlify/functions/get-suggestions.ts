@@ -1,6 +1,7 @@
 import type { Context } from '@netlify/functions';
 import { getDb, initSchema } from '../../src/lib/discovery/db';
 import type { SuggestionResponse } from '../../src/lib/discovery/types';
+import { errorMessage, jsonResponse } from '../../src/lib/httpResponse';
 
 export default async (req: Request, _context: Context) => {
   try {
@@ -39,19 +40,8 @@ export default async (req: Request, _context: Context) => {
       categories: (row.categories as string) || '',
     }));
 
-    return new Response(JSON.stringify(suggestions), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=1800',
-      },
-    });
+    return jsonResponse(suggestions, 200, { 'Cache-Control': 'public, max-age=1800' });
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to fetch suggestions',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    );
+    return jsonResponse({ error: 'Failed to fetch suggestions', message: errorMessage(error) }, 500);
   }
 };

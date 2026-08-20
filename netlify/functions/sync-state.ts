@@ -1,12 +1,11 @@
 import type { Context } from '@netlify/functions';
 import { getDb, initSchema } from '../../src/lib/discovery/db';
+import { jsonResponse } from '../../src/lib/httpResponse';
 
 export default async (req: Request, _context: Context) => {
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 });
   }
-
-  const headers = { 'Content-Type': 'application/json' };
 
   try {
     await initSchema();
@@ -16,7 +15,7 @@ export default async (req: Request, _context: Context) => {
     const { userId, action, articleId } = body;
 
     if (!userId) {
-      return new Response(JSON.stringify({ error: 'userId required' }), { status: 400, headers });
+      return jsonResponse({ error: 'userId required' }, 400);
     }
 
     if (action === 'pull') {
@@ -31,20 +30,14 @@ export default async (req: Request, _context: Context) => {
         }),
       ]);
 
-      return new Response(
-        JSON.stringify({
-          readArticles: readResult.rows.map((r) => r.article_id as string),
-          bookmarks: bookmarkResult.rows.map((r) => r.article_id as string),
-        }),
-        { headers },
-      );
+      return jsonResponse({
+        readArticles: readResult.rows.map((r) => r.article_id as string),
+        bookmarks: bookmarkResult.rows.map((r) => r.article_id as string),
+      });
     }
 
     if (!action || !articleId) {
-      return new Response(JSON.stringify({ error: 'action and articleId required' }), {
-        status: 400,
-        headers,
-      });
+      return jsonResponse({ error: 'action and articleId required' }, 400);
     }
 
     switch (action) {
@@ -74,9 +67,9 @@ export default async (req: Request, _context: Context) => {
         break;
     }
 
-    return new Response(JSON.stringify({ success: true }), { headers });
+    return jsonResponse({ success: true });
   } catch (error) {
     console.error('Sync error:', error);
-    return new Response(JSON.stringify({ success: true, fallback: true }), { headers });
+    return jsonResponse({ success: true, fallback: true });
   }
 };

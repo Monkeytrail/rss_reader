@@ -1,5 +1,6 @@
 import type { Context } from '@netlify/functions';
 import { getDb, initSchema } from '../../src/lib/discovery/db';
+import { errorMessage, jsonResponse } from '../../src/lib/httpResponse';
 
 export default async (req: Request, _context: Context) => {
   if (req.method !== 'POST') {
@@ -10,10 +11,7 @@ export default async (req: Request, _context: Context) => {
     const { domain_id } = await req.json();
 
     if (!domain_id) {
-      return new Response(
-        JSON.stringify({ error: 'Missing domain_id' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } },
-      );
+      return jsonResponse({ error: 'Missing domain_id' }, 400);
     }
 
     await initSchema();
@@ -24,17 +22,8 @@ export default async (req: Request, _context: Context) => {
       args: [domain_id],
     });
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      { headers: { 'Content-Type': 'application/json' } },
-    );
+    return jsonResponse({ success: true });
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to dismiss',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    );
+    return jsonResponse({ error: 'Failed to dismiss', message: errorMessage(error) }, 500);
   }
 };

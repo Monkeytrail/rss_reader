@@ -1,14 +1,12 @@
 import type { Context } from "@netlify/functions";
+import { jsonResponse } from '../../src/lib/httpResponse';
 
 export default async (req: Request, context: Context) => {
   const url = new URL(req.url);
   const youtubeUrl = url.searchParams.get("url");
 
   if (!youtubeUrl) {
-    return new Response(JSON.stringify({ error: "Missing url parameter" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonResponse({ error: "Missing url parameter" }, 400);
   }
 
   try {
@@ -21,24 +19,15 @@ export default async (req: Request, context: Context) => {
     const channelNameMatch = html.match(/"author":"([^"]+)"/);
 
     if (!channelIdMatch) {
-      return new Response(
-        JSON.stringify({ error: "Could not find channel ID" }),
-        { status: 404, headers: { "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "Could not find channel ID" }, 404);
     }
 
     const channelId = channelIdMatch[1];
     const channelName = channelNameMatch ? channelNameMatch[1] : "Unknown";
     const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
 
-    return new Response(
-      JSON.stringify({ channelId, channelName, feedUrl }),
-      { headers: { "Content-Type": "application/json" } }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: "Failed to fetch YouTube page" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ channelId, channelName, feedUrl });
+  } catch {
+    return jsonResponse({ error: "Failed to fetch YouTube page" }, 500);
   }
 };

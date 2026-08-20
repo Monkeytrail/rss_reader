@@ -45,6 +45,8 @@
 </div>
 
 <script>
+  import { toFeedSlug } from '../lib/utils';
+
   const toggle = document.querySelector('.add-feed-toggle');
   const form = document.getElementById('add-feed-form') as HTMLFormElement;
   const cancel = document.querySelector('.add-feed-cancel');
@@ -106,10 +108,7 @@
       }
     }
 
-    const categorySlug = category
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
+    const categorySlug = toFeedSlug(category);
 
     const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
     submitBtn.disabled = true;

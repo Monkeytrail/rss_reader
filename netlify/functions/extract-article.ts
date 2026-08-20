@@ -1,16 +1,14 @@
 import type { Context } from '@netlify/functions';
 import { Readability } from '@mozilla/readability';
 import { JSDOM } from 'jsdom';
+import { errorMessage, jsonResponse } from '../../src/lib/httpResponse';
 
 export default async (req: Request, _context: Context) => {
   const url = new URL(req.url);
   const articleUrl = url.searchParams.get('url');
 
   if (!articleUrl) {
-    return new Response(JSON.stringify({ error: 'Missing url parameter' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: 'Missing url parameter' }, 400);
   }
 
   try {
@@ -36,16 +34,13 @@ export default async (req: Request, _context: Context) => {
     const article = reader.parse();
 
     if (!article) {
-      return new Response(
-        JSON.stringify({ error: 'Could not extract article content' }),
-        { status: 422, headers: { 'Content-Type': 'application/json' } },
-      );
+      return jsonResponse({ error: 'Could not extract article content' }, 422);
     }
 
     const cleanContent = sanitizeHtml(article.content ?? '');
 
-    return new Response(
-      JSON.stringify({
+    return jsonResponse(
+      {
         title: article.title,
         byline: article.byline,
         content: cleanContent,
@@ -54,22 +49,12 @@ export default async (req: Request, _context: Context) => {
         length: article.length,
         readingTime: Math.ceil((article.length ?? 0) / 200),
         originalUrl: articleUrl,
-      }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=3600',
-        },
       },
+      200,
+      { 'Cache-Control': 'public, max-age=3600' },
     );
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to extract article',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    );
+    return jsonResponse({ error: 'Failed to extract article', message: errorMessage(error) }, 500);
   }
 };
 

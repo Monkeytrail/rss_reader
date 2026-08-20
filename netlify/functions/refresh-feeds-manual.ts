@@ -1,6 +1,7 @@
 import type { Context } from '@netlify/functions';
 import { createHash, timingSafeEqual } from 'crypto';
 import { hasRunToday, runFeedRefresh } from '../../src/lib/discovery/refresh-feeds';
+import { errorMessage, jsonResponse } from '../../src/lib/httpResponse';
 
 function constantTimeEqual(a: string, b: string): boolean {
   const ah = createHash('sha256').update(a).digest();
@@ -32,28 +33,18 @@ export default async (req: Request, _context: Context) => {
   }
 
   if (!isAuthorized(req)) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: 'Unauthorized' }, 401);
   }
 
   try {
     if (await hasRunToday()) {
-      return new Response(JSON.stringify({ skipped: true, reason: 'already ran today' }), {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ skipped: true, reason: 'already ran today' });
     }
 
     const result = await runFeedRefresh();
-    return new Response(JSON.stringify(result), {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse(result);
   } catch (error) {
     console.error('Feed refresh failed:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    );
+    return jsonResponse({ error: errorMessage(error) }, 500);
   }
 };

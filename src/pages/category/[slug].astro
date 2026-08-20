@@ -4,8 +4,9 @@ import Header from '../../components/Header.astro';
 import CategoryNav from '../../components/CategoryNav.astro';
 import ArticleCard from '../../components/ArticleCard.astro';
 import VideoCard from '../../components/VideoCard.astro';
+import LoadMoreDays from '../../components/LoadMoreDays.astro';
 import { fetchAllFeeds, getCategories } from '../../lib/feeds';
-import { getDayLabel } from '../../lib/utils';
+import { groupByDay } from '../../lib/utils';
 
 export async function getStaticPaths() {
   const categories = await getCategories();
@@ -20,16 +21,7 @@ const { categoryName } = Astro.props;
 
 const allArticles = await fetchAllFeeds();
 const articles = allArticles.filter((a) => a.categorySlug === slug);
-
-// Group articles by day
-const dayGroups = new Map<string, typeof articles>();
-for (const article of articles) {
-  const label = getDayLabel(article.pubDate);
-  if (!dayGroups.has(label)) {
-    dayGroups.set(label, []);
-  }
-  dayGroups.get(label)!.push(article);
-}
+const dayGroups = groupByDay(articles);
 ---
 
 <Layout title={`${categoryName} - RSS Reader`}>
@@ -79,42 +71,11 @@ for (const article of articles) {
         </section>
       ))}
 
-      {dayGroups.size > 3 && (
-        <div class="load-more-container">
-          <button id="load-more-btn" class="btn-secondary load-more-btn">
-            Show older ({dayGroups.size - 3} more days)
-          </button>
-        </div>
-      )}
+      <LoadMoreDays totalDays={dayGroups.size} />
     </div>
 
     {articles.length === 0 && (
       <p class="no-results">No articles found in this category.</p>
     )}
   </main>
-
-  <script>
-    const loadMoreBtn = document.getElementById('load-more-btn');
-    if (loadMoreBtn) {
-      const LOAD_INCREMENT = 5;
-      let currentlyVisible = 3;
-      const allDayGroups = document.querySelectorAll<HTMLElement>('.day-group[data-day-index]');
-      const totalDays = allDayGroups.length;
-
-      loadMoreBtn.addEventListener('click', () => {
-        const nextBatch = Math.min(currentlyVisible + LOAD_INCREMENT, totalDays);
-        for (let i = currentlyVisible; i < nextBatch; i++) {
-          allDayGroups[i].hidden = false;
-        }
-        currentlyVisible = nextBatch;
-
-        const remaining = totalDays - currentlyVisible;
-        if (remaining <= 0) {
-          loadMoreBtn.style.display = 'none';
-        } else {
-          loadMoreBtn.textContent = `Show older (${remaining} more day${remaining === 1 ? '' : 's'})`;
-        }
-      });
-    }
-  </script>
 </Layout>

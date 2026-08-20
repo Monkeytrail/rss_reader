@@ -1,4 +1,5 @@
 import type { Context } from "@netlify/functions";
+import { jsonResponse } from '../../src/lib/httpResponse';
 
 export default async (req: Request, context: Context) => {
   if (req.method !== 'POST') {
@@ -8,27 +9,18 @@ export default async (req: Request, context: Context) => {
   const buildHookUrl = process.env.BUILD_HOOK_URL;
 
   if (!buildHookUrl) {
-    return new Response(
-      JSON.stringify({ error: 'Build hook not configured' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({ error: 'Build hook not configured' }, 500);
   }
 
   try {
     const response = await fetch(buildHookUrl, { method: 'POST' });
 
     if (response.ok) {
-      return new Response(
-        JSON.stringify({ success: true }),
-        { headers: { 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ success: true });
     } else {
       throw new Error('Build hook failed');
     }
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: 'Failed to trigger build' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+  } catch {
+    return jsonResponse({ error: 'Failed to trigger build' }, 500);
   }
 };

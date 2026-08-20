@@ -197,7 +197,7 @@ import Header from '../components/Header.astro';
 </style>
 
 <script>
-  import { escapeHtml } from '../lib/utils';
+  import { escapeHtml, toFeedSlug } from '../lib/utils';
 
   interface Suggestion {
     domain_id: number;
@@ -279,10 +279,7 @@ import Header from '../components/Header.astro';
         const feedTitle = btn.dataset.feedTitle!;
 
         const category = prompt('Category for this feed:', 'Discovered') || 'Discovered';
-        const categorySlug = category
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/(^-|-$)/g, '');
+        const categorySlug = toFeedSlug(category);
 
         btn.disabled = true;
         btn.textContent = 'Subscribing...';

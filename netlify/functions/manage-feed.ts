@@ -1,11 +1,10 @@
 import type { Context } from '@netlify/functions';
 import { getDb, initSchema } from '../../src/lib/discovery/db';
+import { errorMessage, jsonResponse } from '../../src/lib/httpResponse';
 
 export default async (req: Request, _context: Context) => {
   await initSchema();
   const db = getDb();
-
-  const headers = { 'Content-Type': 'application/json' };
 
   try {
     if (req.method === 'GET') {
@@ -14,7 +13,7 @@ export default async (req: Request, _context: Context) => {
          FROM feeds
          ORDER BY category_slug, sort_order`,
       );
-      return new Response(JSON.stringify(result.rows), { headers });
+      return jsonResponse(result.rows);
     }
 
     if (req.method === 'POST') {
@@ -22,19 +21,13 @@ export default async (req: Request, _context: Context) => {
       const { title, url, category_name, category_slug, source } = body;
 
       if (!title || !url || !category_name || !category_slug) {
-        return new Response(
-          JSON.stringify({ error: 'Missing required fields: title, url, category_name, category_slug' }),
-          { status: 400, headers },
-        );
+        return jsonResponse({ error: 'Missing required fields: title, url, category_name, category_slug' }, 400);
       }
 
       try {
         new URL(url);
       } catch {
-        return new Response(
-          JSON.stringify({ error: 'Invalid feed URL' }),
-          { status: 400, headers },
-        );
+        return jsonResponse({ error: 'Invalid feed URL' }, 400);
       }
 
       const maxOrder = await db.execute({
@@ -50,14 +43,11 @@ export default async (req: Request, _context: Context) => {
       });
 
       if (result.rowsAffected === 0) {
-        return new Response(
-          JSON.stringify({ error: 'Feed URL already exists' }),
-          { status: 409, headers },
-        );
+        return jsonResponse({ error: 'Feed URL already exists' }, 409);
       }
 
       await triggerRebuild();
-      return new Response(JSON.stringify({ success: true }), { headers });
+      return jsonResponse({ success: true });
     }
 
     if (req.method === 'PATCH') {
@@ -65,10 +55,7 @@ export default async (req: Request, _context: Context) => {
       const { url, hidden } = body;
 
       if (!url || hidden === undefined) {
-        return new Response(
-          JSON.stringify({ error: 'Missing required fields: url, hidden' }),
-          { status: 400, headers },
-        );
+        return jsonResponse({ error: 'Missing required fields: url, hidden' }, 400);
       }
 
       await db.execute({
@@ -77,7 +64,7 @@ export default async (req: Request, _context: Context) => {
       });
 
       await triggerRebuild();
-      return new Response(JSON.stringify({ success: true }), { headers });
+      return jsonResponse({ success: true });
     }
 
     if (req.method === 'DELETE') {
@@ -85,10 +72,7 @@ export default async (req: Request, _context: Context) => {
       const { url } = body;
 
       if (!url) {
-        return new Response(
-          JSON.stringify({ error: 'Missing required field: url' }),
-          { status: 400, headers },
-        );
+        return jsonResponse({ error: 'Missing required field: url' }, 400);
       }
 
       await db.execute({
@@ -97,18 +81,12 @@ export default async (req: Request, _context: Context) => {
       });
 
       await triggerRebuild();
-      return new Response(JSON.stringify({ success: true }), { headers });
+      return jsonResponse({ success: true });
     }
 
     return new Response('Method not allowed', { status: 405 });
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: 'Operation failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { status: 500, headers },
-    );
+    return jsonResponse({ error: 'Operation failed', message: errorMessage(error) }, 500);
   }
 };
 

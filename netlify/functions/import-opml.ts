@@ -1,5 +1,6 @@
 import type { Context } from '@netlify/functions';
 import { getDb, initSchema } from '../../src/lib/discovery/db';
+import { errorMessage, jsonResponse } from '../../src/lib/httpResponse';
 
 interface OPMLFeed {
   title: string;
@@ -13,16 +14,11 @@ export default async (req: Request, _context: Context) => {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  const headers = { 'Content-Type': 'application/json' };
-
   try {
     const feeds: OPMLFeed[] = await req.json();
 
     if (!Array.isArray(feeds) || feeds.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'Expected a non-empty array of feeds' }),
-        { status: 400, headers },
-      );
+      return jsonResponse({ error: 'Expected a non-empty array of feeds' }, 400);
     }
 
     await initSchema();
@@ -69,17 +65,8 @@ export default async (req: Request, _context: Context) => {
       await fetch(buildHookUrl, { method: 'POST' }).catch(() => {});
     }
 
-    return new Response(
-      JSON.stringify({ imported, skipped }),
-      { headers },
-    );
+    return jsonResponse({ imported, skipped });
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: 'Import failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { status: 500, headers },
-    );
+    return jsonResponse({ error: 'Import failed', message: errorMessage(error) }, 500);
   }
 };

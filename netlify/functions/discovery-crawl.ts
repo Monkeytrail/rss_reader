@@ -5,6 +5,7 @@ import { groupStoriesByDomain } from '../../src/lib/discovery/domain-filter';
 import { discoverFeed } from '../../src/lib/discovery/feed-discoverer';
 import { calculateCycleScore, updateDomainScore } from '../../src/lib/discovery/scorer';
 import type { CollectedStory } from '../../src/lib/discovery/types';
+import { errorMessage, jsonResponse } from '../../src/lib/httpResponse';
 
 export default async (req: Request, context: Context) => {
   const startTime = new Date().toISOString();
@@ -133,12 +134,9 @@ export default async (req: Request, context: Context) => {
       args: [startTime, storiesCollected, newDomainsFound, feedsDiscovered, newSuggestions, errors.length > 0 ? errors.join('; ') : null],
     });
 
-    return new Response(
-      JSON.stringify({ success: true, storiesCollected, newDomainsFound, feedsDiscovered, newSuggestions, errors }),
-      { headers: { 'Content-Type': 'application/json' } },
-    );
+    return jsonResponse({ success: true, storiesCollected, newDomainsFound, feedsDiscovered, newSuggestions, errors });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = errorMessage(error);
 
     try {
       const db = getDb();
@@ -151,10 +149,7 @@ export default async (req: Request, context: Context) => {
       /* ignore logging failure */
     }
 
-    return new Response(
-      JSON.stringify({ error: message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    );
+    return jsonResponse({ error: message }, 500);
   }
 };
 

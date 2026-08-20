@@ -1,6 +1,7 @@
 ---
-const buildTime = new Date().toISOString();
-const buildTimeLabel = new Date(buildTime).toLocaleString('nl-NL', {
+const buildDate = new Date();
+const buildTime = buildDate.toISOString();
+const buildTimeLabel = buildDate.toLocaleString('nl-NL', {
   dateStyle: 'medium',
   timeStyle: 'short',
 });
@@ -50,7 +51,7 @@ const buildTimeLabel = new Date(buildTime).toLocaleString('nl-NL', {
       } else {
         throw new Error('Rebuild failed');
       }
-    } catch (error) {
+    } catch {
       alert('Could not trigger rebuild.');
       btn.classList.remove('loading');
       btn.removeAttribute('disabled');

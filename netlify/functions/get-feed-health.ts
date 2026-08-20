@@ -1,5 +1,8 @@
 import type { Context } from '@netlify/functions';
 import { getDb, initSchema } from '../../src/lib/discovery/db';
+import { jsonResponse } from '../../src/lib/httpResponse';
+
+const CACHE_HEADERS = { 'Cache-Control': 'public, max-age=300' };
 
 export default async (_req: Request, _context: Context) => {
   try {
@@ -12,9 +15,7 @@ export default async (_req: Request, _context: Context) => {
     );
 
     if (builds.rows.length === 0) {
-      return new Response(JSON.stringify({}), {
-        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=300' },
-      });
+      return jsonResponse({}, 200, CACHE_HEADERS);
     }
 
     const buildTimes = builds.rows.map((r) => r.build_time as string);
@@ -41,14 +42,9 @@ export default async (_req: Request, _context: Context) => {
       });
     }
 
-    return new Response(JSON.stringify(healthByFeed), {
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=300' },
-    });
+    return jsonResponse(healthByFeed, 200, CACHE_HEADERS);
   } catch (error) {
     console.error('Feed health error:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch feed health' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: 'Failed to fetch feed health' }, 500);
   }
 };

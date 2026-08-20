@@ -37,12 +37,7 @@ import Header from '../../components/Header.astro';
 </style>
 
 <script>
-  const SITE_URL = 'https://rss-pardoena.netlify.app';
-  const API = `${SITE_URL}/.netlify/functions/read-later`;
-  const TOKEN_KEY = 'rl-token';
-  const LIMIT = 30;
-
-  function getToken(): string { return localStorage.getItem(TOKEN_KEY) || ''; }
+  import { READ_LATER_API as API, getToken, apiItem, escHtml } from '../../lib/readLaterApi';
 
   const loadingEl = document.getElementById('rl-loading')!;
   const emptyEl = document.getElementById('rl-empty')!;
@@ -123,14 +118,6 @@ import Header from '../../components/Header.astro';
     return li;
   }
 
-  async function apiItem(method: string, id: number) {
-    return fetch(`${SITE_URL}/.netlify/functions/read-later-item`, {
-      method,
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` },
-      body: JSON.stringify({ id }),
-    });
-  }
-
   async function restoreItem(li: HTMLLIElement, id: number) {
     li.style.opacity = '0';
     li.style.transform = 'translateX(-20px)';
@@ -144,10 +131,6 @@ import Header from '../../components/Header.astro';
     li.style.transform = 'translateX(20px)';
     await apiItem('DELETE', id);
     setTimeout(() => li.remove(), 300);
-  }
-
-  function escHtml(str: string): string {
-    return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   loadArchive();

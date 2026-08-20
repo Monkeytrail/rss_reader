@@ -156,6 +156,8 @@ function formatLastSeen(date: Date | null): string {
 </Layout>
 
 <script>
+  import { toFeedSlug } from '../lib/utils';
+
   // --- Hide feed (move to hidden) ---
   document.querySelectorAll<HTMLElement>('.remove-feed[data-url]').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -205,7 +207,7 @@ function formatLastSeen(date: Date | null): string {
     const url = formData.get('url') as string;
     let title = formData.get('title') as string;
     const category = (formData.get('category') as string) || 'Custom';
-    const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const categorySlug = toFeedSlug(category);
 
     if (!title) {
       let fallbackTitle = url;
@@ -323,7 +325,7 @@ ${outlines}
       const category = parent?.tagName === 'outline'
         ? (parent.getAttribute('title') || parent.getAttribute('text') || 'Imported')
         : 'Imported';
-      const categorySlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const categorySlug = toFeedSlug(category);
       feeds.push({ title, url, category, categorySlug });
     });
 

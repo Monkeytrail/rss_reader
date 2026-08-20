@@ -39,7 +39,10 @@
       "Bash(curl -s http://localhost:4321/)",
       "Bash(curl -s http://localhost:4321/category/youtube -o /tmp/claude-1000/-home-thrawn-Development-rss-reader/a1b79b2b-b9d3-4b6a-90a0-3b01390e1c98/scratchpad/youtube-page.html)",
       "Bash(curl -s \"http://localhost:4321/src/layouts/Layout.astro?astro&type=script&index=0&lang.ts\")",
-      "Bash(curl -s \"http://localhost:4321/src/styles/global.css\")"
+      "Bash(curl -s \"http://localhost:4321/src/styles/global.css\")",
+      "Bash(npm run *)",
+      "Bash(echo \"started with pid $!\")",
+      "Bash(jobs)"
     ]
   }
 }

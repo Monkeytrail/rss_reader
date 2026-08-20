@@ -1,5 +1,6 @@
 import type { Context } from '@netlify/functions';
 import { getDb, initSchema } from '../../src/lib/discovery/db';
+import { errorMessage, jsonResponse } from '../../src/lib/httpResponse';
 
 interface SubscribeBody {
   domain_id: number;
@@ -19,10 +20,7 @@ export default async (req: Request, _context: Context) => {
     const { domain_id, feed_url, feed_title, category, category_slug } = body;
 
     if (!feed_url || !feed_title || !category || !category_slug || !domain_id) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } },
-      );
+      return jsonResponse({ error: 'Missing required fields' }, 400);
     }
 
     await initSchema();
@@ -54,17 +52,8 @@ export default async (req: Request, _context: Context) => {
       await fetch(buildHookUrl, { method: 'POST' }).catch(() => {});
     }
 
-    return new Response(
-      JSON.stringify({ success: true, message: 'Feed subscribed, rebuild triggered' }),
-      { headers: { 'Content-Type': 'application/json' } },
-    );
+    return jsonResponse({ success: true, message: 'Feed subscribed, rebuild triggered' });
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        error: 'Failed to subscribe',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    );
+    return jsonResponse({ error: 'Failed to subscribe', message: errorMessage(error) }, 500);
   }
 };

@@ -1,5 +1,6 @@
 import type { Config, Context } from '@netlify/functions';
 import { getDb, initSchema } from '../../src/lib/discovery/db';
+import { errorMessage, jsonResponse } from '../../src/lib/httpResponse';
 
 const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
 const MIN_SNAPSHOTS = 3;
@@ -56,9 +57,7 @@ export default async (_req: Request, _context: Context) => {
 
     if (toDelete.length === 0) {
       console.log('Stale feed cleanup: no feeds to remove');
-      return new Response(JSON.stringify({ deleted: 0 }), {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ deleted: 0 });
     }
 
     // Delete feeds and their snapshots
@@ -85,21 +84,10 @@ export default async (_req: Request, _context: Context) => {
       await fetch(buildHookUrl, { method: 'POST' }).catch(() => {});
     }
 
-    return new Response(
-      JSON.stringify({
-        deleted: toDelete.length,
-        neverActive,
-        quiet,
-        feeds: toDelete,
-      }),
-      { headers: { 'Content-Type': 'application/json' } },
-    );
+    return jsonResponse({ deleted: toDelete.length, neverActive, quiet, feeds: toDelete });
   } catch (error) {
     console.error('Stale feed cleanup failed:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    );
+    return jsonResponse({ error: errorMessage(error) }, 500);
   }
 };
 

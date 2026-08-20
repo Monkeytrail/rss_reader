@@ -270,6 +270,15 @@ export async function fetchAllFeeds(): Promise<Article[]> {
   return cachedArticles;
 }
 
+function getLatestArticleDate(items: any[] | undefined): Date | null {
+  if (!items || items.length === 0) return null;
+  const dates = items
+    .map((item) => new Date(item.pubDate || item.isoDate || 0))
+    .filter((date) => !isNaN(date.getTime()) && date.getTime() > 0)
+    .sort((a, b) => b.getTime() - a.getTime());
+  return dates[0] || null;
+}
+
 async function recordFeedHealthSnapshot(sources: FeedSource[]): Promise<void> {
   try {
     const { getDb, initSchema } = await import('./discovery/db');
@@ -291,16 +300,11 @@ async function recordFeedHealthSnapshot(sources: FeedSource[]): Promise<void> {
         status = 'error';
       } else if (parsed) {
         articleCount = parsed.items?.length || 0;
-        if (parsed.items && parsed.items.length > 0) {
-          const dates = parsed.items
-            .map((item: any) => new Date(item.pubDate || item.isoDate || 0))
-            .filter((d: Date) => !isNaN(d.getTime()) && d.getTime() > 0)
-            .sort((a: Date, b: Date) => b.getTime() - a.getTime());
-          if (dates[0]) {
-            lastArticleDate = dates[0].toISOString();
-            if (Math.floor((Date.now() - dates[0].getTime()) / 86400000) > QUIET_THRESHOLD_DAYS) {
-              status = 'quiet';
-            }
+        const latestDate = getLatestArticleDate(parsed.items);
+        if (latestDate) {
+          lastArticleDate = latestDate.toISOString();
+          if (Math.floor((Date.now() - latestDate.getTime()) / 86400000) > QUIET_THRESHOLD_DAYS) {
+            status = 'quiet';
           }
         }
       }
@@ -377,15 +381,7 @@ export async function getFeedMetadata(): Promise<FeedMeta[]> {
     const parsed = cachedParsedFeeds?.get(source.url);
     if (parsed) {
       articleCount = parsed.items?.length || 0;
-
-      if (parsed.items && parsed.items.length > 0) {
-        const dates = parsed.items
-          .map((item: any) => new Date(item.pubDate || item.isoDate || 0))
-          .filter((date: Date) => !isNaN(date.getTime()) && date.getTime() > 0)
-          .sort((a: Date, b: Date) => b.getTime() - a.getTime());
-
-        lastArticleDate = dates[0] || null;
-      }
+      lastArticleDate = getLatestArticleDate(parsed.items);
     }
 
     const daysSinceLastArticle = lastArticleDate

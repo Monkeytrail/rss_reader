@@ -94,6 +94,16 @@ const buildTime = new Date().toISOString();
       // Read status tracking
       import { isRead, markAsRead, markAsUnread } from '../lib/readStatus';
       import { pullRemoteState } from '../lib/syncState';
+      import { isBookmarked, addBookmark, removeBookmark } from '../lib/bookmarks';
+
+      function setBookmarkUI(card: HTMLElement, bookmarked: boolean) {
+        card.classList.toggle('is-bookmarked', bookmarked);
+        const btn = card.querySelector('.bookmark-button');
+        if (!btn) return;
+        const icon = btn.querySelector('.bookmark-icon');
+        if (icon) icon.textContent = bookmarked ? '★' : '☆';
+        btn.lastChild!.textContent = bookmarked ? ' Saved' : ' Save';
+      }
 
       // Mark already-read articles on load (from localStorage)
       document.querySelectorAll<HTMLElement>('[data-article-id]').forEach((card) => {
@@ -130,15 +140,7 @@ const buildTime = new Date().toISOString();
           document.querySelectorAll<HTMLElement>('[data-article-id]').forEach((card) => {
             const id = card.dataset.articleId!;
             if (localReads.has(id)) card.classList.add('is-read');
-            if (localBookmarks.has(id)) {
-              card.classList.add('is-bookmarked');
-              const btn = card.querySelector('.bookmark-button');
-              if (btn) {
-                const icon = btn.querySelector('.bookmark-icon');
-                if (icon) icon.textContent = '\u2605';
-                btn.lastChild!.textContent = ' Saved';
-              }
-            }
+            if (localBookmarks.has(id)) setBookmarkUI(card, true);
           });
         }
       });
@@ -169,18 +171,8 @@ const buildTime = new Date().toISOString();
       });
 
       // Bookmark handling
-      import { isBookmarked, addBookmark, removeBookmark } from '../lib/bookmarks';
-
       document.querySelectorAll<HTMLElement>('[data-article-id]').forEach((card) => {
-        if (isBookmarked(card.dataset.articleId!)) {
-          card.classList.add('is-bookmarked');
-          const btn = card.querySelector('.bookmark-button');
-          if (btn) {
-            const icon = btn.querySelector('.bookmark-icon');
-            if (icon) icon.textContent = '\u2605';
-            btn.lastChild!.textContent = ' Saved';
-          }
-        }
+        if (isBookmarked(card.dataset.articleId!)) setBookmarkUI(card, true);
       });
 
       document.addEventListener('click', (e) => {
@@ -194,19 +186,14 @@ const buildTime = new Date().toISOString();
         if (!card) return;
 
         const articleId = card.dataset.articleId!;
-        const icon = btn.querySelector('.bookmark-icon');
+        const nowBookmarked = !isBookmarked(articleId);
 
-        if (isBookmarked(articleId)) {
-          removeBookmark(articleId);
-          card.classList.remove('is-bookmarked');
-          if (icon) icon.textContent = '\u2606';
-          btn.lastChild!.textContent = ' Save';
-        } else {
+        if (nowBookmarked) {
           addBookmark(articleId);
-          card.classList.add('is-bookmarked');
-          if (icon) icon.textContent = '\u2605';
-          btn.lastChild!.textContent = ' Saved';
+        } else {
+          removeBookmark(articleId);
         }
+        setBookmarkUI(card, nowBookmarked);
       });
 
       // Read Later button handling

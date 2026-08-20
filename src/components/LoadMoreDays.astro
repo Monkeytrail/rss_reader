@@ -1,0 +1,40 @@
+---
+interface Props {
+  totalDays: number;
+}
+
+const { totalDays } = Astro.props;
+---
+
+{totalDays > 3 && (
+  <div class="load-more-container">
+    <button id="load-more-btn" class="btn-secondary load-more-btn">
+      Show older ({totalDays - 3} more days)
+    </button>
+  </div>
+)}
+
+<script>
+  const loadMoreBtn = document.getElementById('load-more-btn');
+  if (loadMoreBtn) {
+    const LOAD_INCREMENT = 5;
+    let currentlyVisible = 3;
+    const allDayGroups = document.querySelectorAll<HTMLElement>('.day-group[data-day-index]');
+    const totalDays = allDayGroups.length;
+
+    loadMoreBtn.addEventListener('click', () => {
+      const nextBatch = Math.min(currentlyVisible + LOAD_INCREMENT, totalDays);
+      for (let i = currentlyVisible; i < nextBatch; i++) {
+        allDayGroups[i].hidden = false;
+      }
+      currentlyVisible = nextBatch;
+
+      const remaining = totalDays - currentlyVisible;
+      if (remaining <= 0) {
+        loadMoreBtn.style.display = 'none';
+      } else {
+        loadMoreBtn.textContent = `Show older (${remaining} more day${remaining === 1 ? '' : 's'})`;
+      }
+    });
+  }
+</script>
