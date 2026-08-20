@@ -1,11 +1,18 @@
 ---
-// Server-side: nothing needed
+const buildTime = new Date().toISOString();
+const buildTimeLabel = new Date(buildTime).toLocaleString('nl-NL', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
 ---
 
-<button id="refresh-btn" class="refresh-button" aria-label="Refresh feeds">
-  <span class="refresh-icon">&#8635;</span>
-  <span class="refresh-text">Refresh</span>
-</button>
+<div class="refresh-group">
+  <time class="last-build-time" datetime={buildTime} title={`Last build: ${buildTimeLabel}`}>{buildTimeLabel}</time>
+  <button id="refresh-btn" class="refresh-button" aria-label="Refresh feeds">
+    <span class="refresh-icon">&#8635;</span>
+    <span class="refresh-text">Refresh</span>
+  </button>
+</div>
 
 <script>
   const btn = document.getElementById('refresh-btn')!;
@@ -52,6 +59,19 @@
 </script>
 
 <style>
+  .refresh-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .last-build-time {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    margin-right: 8px;
+  }
+
   .refresh-button {
     display: flex;
     align-items: center;
