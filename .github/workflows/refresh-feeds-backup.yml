@@ -1,13 +1,13 @@
 name: Refresh feeds (backup)
 
 # Netlify's own scheduled function (netlify/functions/refresh-feeds-scheduled.ts)
-# runs daily at 08:00 UTC, but Netlify's scheduler is best-effort and
-# occasionally skips a day entirely. This runs 30 minutes later as a safety
-# net — if the Netlify run already happened, this finds nothing new (cheap
-# no-op); if it didn't, this covers the day.
+# runs daily at 06:00 and 11:00 UTC (8am/1pm CEST), but Netlify's scheduler is
+# best-effort and occasionally skips a run entirely. This runs 30 minutes
+# later as a safety net — if the Netlify run already happened, this finds
+# nothing new (cheap no-op); if it didn't, this covers the run.
 on:
   schedule:
-    - cron: '30 8 * * *'
+    - cron: '30 6,11 * * *'
   workflow_dispatch: {}
 
 jobs:

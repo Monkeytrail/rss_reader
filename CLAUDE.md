@@ -14,7 +14,7 @@ There is no lint or test script configured.
 ## Architecture
 
 **Static site, build-time content fetching.** This is an Astro site with `output: 'static'`. Articles are NOT fetched at request time — `fetchAllFeeds()` in `src/lib/feeds.ts` pulls and parses every RSS/Atom feed during `astro build` and the results are baked into the static HTML. This means the site only shows new articles after a rebuild, which is why rebuilds are triggered from several places:
-- A scheduled Netlify function, `netlify/functions/refresh-feeds-scheduled.ts` (cron `0 8 * * *`), calls `runFeedRefresh()` in `src/lib/discovery/refresh-feeds.ts`.
+- A scheduled Netlify function, `netlify/functions/refresh-feeds-scheduled.ts` (cron `0 6,11 * * *`, i.e. 8am/1pm CEST — Netlify cron is UTC-only so this drifts an hour during CET), calls `runFeedRefresh()` in `src/lib/discovery/refresh-feeds.ts`.
 - `netlify/functions/refresh-feeds-manual.ts` is a bearer-token-protected backup endpoint meant to be hit by an external cron (GitHub Actions) in case Netlify's own scheduler misses a run.
 - `netlify/functions/trigger-rebuild.ts` POSTs to the Netlify `BUILD_HOOK_URL` to kick off a fresh static build (used by the manual "refresh" button in the UI).
 
