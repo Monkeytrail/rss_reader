@@ -327,6 +327,7 @@ async function recordFeedHealthSnapshot(sources: FeedSource[]): Promise<void> {
 const CATEGORY_ORDER: string[] = [
   'pc-gaming',
   'comics',
+  'football',
   'tech-longreads',
   'tech-bloggers',
   'bikepacking',
