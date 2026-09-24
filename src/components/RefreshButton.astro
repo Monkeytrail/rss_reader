@@ -49,10 +49,11 @@ const buildTimeLabel = buildDate.toLocaleString('nl-NL', {
         const REBUILD_WAIT_MS = 90_000; // 90 seconds
         setTimeout(() => window.location.reload(), REBUILD_WAIT_MS);
       } else {
-        throw new Error('Rebuild failed');
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error || 'Rebuild failed');
       }
-    } catch {
-      alert('Could not trigger rebuild.');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Could not trigger rebuild.');
       btn.classList.remove('loading');
       btn.removeAttribute('disabled');
     }

@@ -115,6 +115,11 @@ export async function initSchema(): Promise<void> {
       yt_duration TEXT
     )`,
     `CREATE INDEX IF NOT EXISTS idx_read_later_queue ON read_later(read_at, added_at DESC)`,
+    `CREATE TABLE IF NOT EXISTS build_triggers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      triggered_at TEXT NOT NULL,
+      reason TEXT
+    )`,
   ]);
 
   // Add conditional-fetching columns (idempotent: ignores "duplicate column" errors)

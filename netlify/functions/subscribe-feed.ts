@@ -1,5 +1,6 @@
 import type { Context } from '@netlify/functions';
 import { getDb, initSchema } from '../../src/lib/discovery/db';
+import { triggerBuildIfNeeded } from '../../src/lib/discovery/buildTrigger';
 import { errorMessage, jsonResponse } from '../../src/lib/httpResponse';
 
 interface SubscribeBody {
@@ -47,10 +48,7 @@ export default async (req: Request, _context: Context) => {
     });
 
     // Trigger rebuild so the feed appears on next build
-    const buildHookUrl = process.env.BUILD_HOOK_URL;
-    if (buildHookUrl) {
-      await fetch(buildHookUrl, { method: 'POST' }).catch(() => {});
-    }
+    await triggerBuildIfNeeded('subscribe-feed');
 
     return jsonResponse({ success: true, message: 'Feed subscribed, rebuild triggered' });
   } catch (error) {

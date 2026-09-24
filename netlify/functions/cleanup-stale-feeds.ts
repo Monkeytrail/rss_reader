@@ -1,5 +1,6 @@
 import type { Config, Context } from '@netlify/functions';
 import { getDb, initSchema } from '../../src/lib/discovery/db';
+import { triggerBuildIfNeeded } from '../../src/lib/discovery/buildTrigger';
 import { errorMessage, jsonResponse } from '../../src/lib/httpResponse';
 
 const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
@@ -79,10 +80,7 @@ export default async (_req: Request, _context: Context) => {
     );
 
     // Trigger rebuild so deleted feeds disappear from the site
-    const buildHookUrl = process.env.BUILD_HOOK_URL;
-    if (buildHookUrl) {
-      await fetch(buildHookUrl, { method: 'POST' }).catch(() => {});
-    }
+    await triggerBuildIfNeeded('cleanup-stale-feeds');
 
     return jsonResponse({ deleted: toDelete.length, neverActive, quiet, feeds: toDelete });
   } catch (error) {

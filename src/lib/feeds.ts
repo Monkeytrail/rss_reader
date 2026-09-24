@@ -1,6 +1,10 @@
 import { createHash } from 'crypto';
 import Parser from 'rss-parser';
 import { calculateReadingTime } from './utils';
+import { CHROME_UA, fetchWithRetry, mapWithConcurrency } from './httpRetry';
+
+const FEED_CONCURRENCY = 6;
+const SHORTS_CONCURRENCY = 3;
 
 const parser = new Parser({
   timeout: 10000,
@@ -28,14 +32,12 @@ function isYouTubeShortSync(article: { link: string; title: string; summary?: st
 
 async function isYouTubeShortHttp(videoId: string): Promise<boolean> {
   try {
-    const res = await fetch(`https://www.youtube.com/shorts/${videoId}`, {
-      redirect: 'follow',
-      signal: AbortSignal.timeout(5000),
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-    });
+    const res = await fetchWithRetry(
+      `https://www.youtube.com/shorts/${videoId}`,
+      { redirect: 'follow', headers: { 'User-Agent': CHROME_UA } },
+      5000,
+      { retries: 1 },
+    );
     return res.url.includes('/shorts/');
   } catch {
     return false;
@@ -58,9 +60,10 @@ async function filterOutShorts(articles: Article[]): Promise<Article[]> {
   }
 
   if (needsHttpCheck.length > 0) {
-    const results = await Promise.allSettled(
-      needsHttpCheck.map(async (a) => ({ id: a.id, isShort: await isYouTubeShortHttp(a.videoId!) })),
-    );
+    const results = await mapWithConcurrency(needsHttpCheck, SHORTS_CONCURRENCY, async (a) => ({
+      id: a.id,
+      isShort: await isYouTubeShortHttp(a.videoId!),
+    }));
     for (const r of results) {
       if (r.status === 'fulfilled' && r.value.isShort) {
         shortIds.add(r.value.id);
@@ -186,19 +189,27 @@ export async function fetchAllFeeds(): Promise<Article[]> {
   const articles: Article[] = [];
   cachedParsedFeeds = new Map();
 
-  const results = await Promise.allSettled(
-    sources.map(async (feed) => {
+  const results = await mapWithConcurrency(sources, FEED_CONCURRENCY, async (feed) => {
       try {
-        const feedResponse = await fetch(feed.url, {
-          headers: { 'User-Agent': 'AstroRSSReader/1.0' },
-          signal: AbortSignal.timeout(10000),
-        });
+        const isYouTube = isYouTubeFeed(feed.url);
+        const feedResponse = await fetchWithRetry(
+          feed.url,
+          { headers: { 'User-Agent': isYouTube ? CHROME_UA : 'AstroRSSReader/1.0' } },
+          10000,
+          {
+            retries: 2,
+            baseDelayMs: 500,
+            onRetry: (attempt, error) => {
+              const msg = error instanceof Error ? error.message : String(error);
+              console.warn(`Retrying ${feed.title} (attempt ${attempt + 1}/3) after ${msg}`);
+            },
+          },
+        );
         if (!feedResponse.ok) throw new Error(`HTTP ${feedResponse.status}`);
         const feedText = await feedResponse.text();
         const parsed = await parser.parseString(feedText);
         cachedParsedFeeds!.set(feed.url, parsed);
         const feedArticles: Article[] = [];
-        const isYouTube = isYouTubeFeed(feed.url);
 
         const now = Date.now();
         for (const item of parsed.items.slice(0, 10)) {
@@ -250,8 +261,7 @@ export async function fetchAllFeeds(): Promise<Article[]> {
         cachedFeedErrors.set(feed.url, msg);
         return [];
       }
-    }),
-  );
+    });
 
   for (const result of results) {
     if (result.status === 'fulfilled') {

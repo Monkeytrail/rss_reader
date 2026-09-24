@@ -1,4 +1,5 @@
 import { getDb, initSchema } from './db';
+import { triggerBuildIfNeeded } from './buildTrigger';
 
 const BATCH_SIZE = 10;
 const FEED_TIMEOUT = 15_000;
@@ -151,21 +152,11 @@ export async function runFeedRefresh(): Promise<RefreshFeedsResult> {
   // Only trigger rebuild if any feed returned new content
   let rebuildTriggered = false;
   if (updated > 0) {
-    const buildHookUrl = process.env.BUILD_HOOK_URL;
-    if (buildHookUrl) {
-      console.log(`Triggering rebuild (${updated} feeds changed)`);
-      try {
-        const res = await fetch(buildHookUrl, { method: 'POST' });
-        if (!res.ok) {
-          console.error(`Build hook returned ${res.status} ${res.statusText}`);
-        } else {
-          rebuildTriggered = true;
-        }
-      } catch (error) {
-        console.error('Build hook request failed:', error);
-      }
-    } else {
-      console.warn('BUILD_HOOK_URL not set — skipping rebuild trigger');
+    console.log(`Triggering rebuild (${updated} feeds changed)`);
+    const result = await triggerBuildIfNeeded('feed-refresh');
+    rebuildTriggered = result.triggered;
+    if (!result.triggered) {
+      console.log(`Rebuild skipped: ${result.skippedReason}`);
     }
   } else {
     console.log('No feeds changed — skipping rebuild');
