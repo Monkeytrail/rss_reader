@@ -5,10 +5,15 @@ export interface RetryOptions {
   retries?: number;
   baseDelayMs?: number;
   onRetry?: (attempt: number, error: unknown) => void;
+  // YouTube's /feeds/videos.xml endpoint intermittently 404s for valid channels
+  // and typically succeeds on a retry, so treat 404 as retryable there.
+  retryOn404?: boolean;
 }
 
-function isTransient(error: unknown, response: Response | null): boolean {
-  if (response) return response.status === 429 || response.status >= 500;
+function isTransient(response: Response | null, retryOn404: boolean): boolean {
+  if (response) {
+    return response.status === 429 || response.status >= 500 || (retryOn404 && response.status === 404);
+  }
   return true; // network error / timeout
 }
 
@@ -22,13 +27,13 @@ export async function fetchWithRetry(
   timeoutMs: number,
   opts: RetryOptions = {},
 ): Promise<Response> {
-  const { retries = 2, baseDelayMs = 500, onRetry } = opts;
+  const { retries = 2, baseDelayMs = 500, onRetry, retryOn404 = false } = opts;
 
   let lastError: unknown;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const response = await fetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs) });
-      if (response.ok || !isTransient(null, response) || attempt === retries) {
+      if (response.ok || !isTransient(response, retryOn404) || attempt === retries) {
         return response;
       }
       lastError = new Error(`HTTP ${response.status}`);

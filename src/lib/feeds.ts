@@ -197,11 +197,14 @@ export async function fetchAllFeeds(): Promise<Article[]> {
           { headers: { 'User-Agent': isYouTube ? CHROME_UA : 'AstroRSSReader/1.0' } },
           10000,
           {
-            retries: 2,
-            baseDelayMs: 500,
+            retries: isYouTube ? 4 : 2,
+            baseDelayMs: isYouTube ? 1000 : 500,
+            // YouTube's feed endpoint intermittently 404s on valid channels and
+            // recovers on retry, so don't give up on 404 the way we would elsewhere.
+            retryOn404: isYouTube,
             onRetry: (attempt, error) => {
               const msg = error instanceof Error ? error.message : String(error);
-              console.warn(`Retrying ${feed.title} (attempt ${attempt + 1}/3) after ${msg}`);
+              console.warn(`Retrying ${feed.title} (attempt ${attempt + 1}) after ${msg}`);
             },
           },
         );
