@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import Header from '../components/Header.astro';
 import { getFeedMetadata, getFeedErrors, getCategories, getHiddenFeeds } from '../lib/feeds';
+import { toFeedSlug } from '../lib/utils';
 
 const feeds = await getFeedMetadata();
 const feedErrors = await getFeedErrors();
@@ -45,7 +46,7 @@ function formatLastSeen(date: Date | null): string {
           {feedErrors.map((err) => (
             <li class="feed-item feed-error-item">
               <div class="feed-info">
-                <span class="feed-title">{err.title}</span>
+                <a href={`/source/${toFeedSlug(err.title)}`} class="feed-title">{err.title}</a>
                 <span class="feed-meta">{err.category}</span>
                 <code class="feed-error-message">{err.error}</code>
               </div>
@@ -82,7 +83,7 @@ function formatLastSeen(date: Date | null): string {
             <li class="feed-item" data-feed-url={feed.url} style={feed.isQuiet ? 'border-left: 3px solid rgba(255,200,0,0.6); padding-left: 0.5rem; background: rgba(255,200,0,0.02); border-radius: 4px; opacity: 0.6;' : ''}>
               <img src={feed.faviconUrl} alt="" class="feed-icon" width="16" height="16" loading="lazy" />
               <div class="feed-info">
-                <span class="feed-title">{feed.title}</span>
+                <a href={`/source/${toFeedSlug(feed.title)}`} class="feed-title">{feed.title}</a>
                 <span class="feed-meta">
                   {formatLastSeen(feed.lastArticleDate)}
                   {feed.articleCount > 0 && ` \u00b7 ${feed.articleCount} items`}
